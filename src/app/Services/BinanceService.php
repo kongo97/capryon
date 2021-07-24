@@ -806,7 +806,7 @@ class BinanceService extends Command
         Log::debug("get first price", $crypto);
 
         # check percent change
-        while($crypto["percent_change"] < 0.4)
+        while($crypto["percent_change"] < 0.67)
         {
             # timeout
             sleep(10);
