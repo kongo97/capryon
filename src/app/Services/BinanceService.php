@@ -808,6 +808,9 @@ class BinanceService extends Command
         # check percent change
         while($crypto["percent_change"] < 0.4)
         {
+            # timeout
+            sleep(10);
+
             try
             {
                 # get first price
@@ -858,9 +861,6 @@ class BinanceService extends Command
             {
                 Log::debug("crypto is going up [+".$crypto["percent_change"]."%]", $crypto);
             }
-
-            # timeout
-            sleep(10);
         }
 
         # BAD sell
