@@ -49,7 +49,7 @@ class BinanceController extends Controller
 
         $response = [
             "error" => false,
-            "balance" => $balance <= 300 ? round($balance, 2, PHP_ROUND_HALF_DOWN) : round($balance - 300, 2, PHP_ROUND_HALF_DOWN)
+            "balance" => $balance <= 300 ? round($balance, 2, PHP_ROUND_HALF_DOWN) : round($balance, 2, PHP_ROUND_HALF_DOWN)
         ];
 
         return json_encode($response);

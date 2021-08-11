@@ -120,6 +120,16 @@ class BinanceServiceTest extends TestCase
         $this->assertNotNull($price);
     }
 
+    // ./vendor/bin/phpunit --filter testGetOrders tests/Unit/BinanceServiceTest.php
+    public function testGetOrders()
+    {
+        $price = BinanceService::getOrders("COMPUSDT", 392, 1);
+
+        echo "N: $price";
+
+        $this->assertNotNull($price);
+    }
+
     // ./vendor/bin/phpunit --filter testGoodSell tests/Unit/BinanceServiceTest.php
     public function testGoodSell()
     {

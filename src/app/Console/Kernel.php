@@ -25,7 +25,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->exec("php artisan capryon:bid")->everyTenMinutes()->withoutOverlapping();
+        $schedule->exec("php artisan capryon:bid")->everyFiveMinutes()->withoutOverlapping();
     }
 
     /**

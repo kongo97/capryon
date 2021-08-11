@@ -17,18 +17,16 @@
   <div id="app">
     <v-app>
         <v-main>
-            <v-app-bar
-                color="yellow"
-            >
-            Capryon
-            </v-app-bar>
+            <!-- NAVBAR -->
+            <v-app-bar color="yellow">Capryon</v-app-bar>
             
+            <!-- PAGE CONTAINER -->
             <v-container>
-            <div class="row">
-                <div class="col-md-12">
-                <h1 id="balance">@{{balance}} $</h1>
-                </div>
-            </div>
+              <div class="row">
+                  <div class="col-md-12">
+                  <h1 id="balance">@{{balance}} $</h1>
+                  </div>
+              </div>
             </v-container>
         </v-main>
     </v-app>

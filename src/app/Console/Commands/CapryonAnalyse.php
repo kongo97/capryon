@@ -38,7 +38,7 @@ class CapryonAnalyse extends Command
      */
     public function handle()
     {
-        BinanceService::bid("COMPUSDT", 300);
+        BinanceService::bid("COMPUSDT", 350);
 
         return 1;
     }

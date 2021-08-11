@@ -155,6 +155,17 @@ class BinanceService extends Command
         return Carbon::now()->timestamp * 1000;
     }
 
+    # get binance time
+    public static function getOrders($name, $price, $days)
+    {
+        $orders = Order::where('updated_at', '>', Carbon::now()->subDays($days))
+            ->where('in', '>=', $price)
+            ->get()
+            ->toArray();
+
+        return count($orders);
+    }
+
     # analyse crypto
     public static function analyse()
     {
@@ -538,17 +549,27 @@ class BinanceService extends Command
         # decode json response
         $json_response = json_decode($response->body(), true);
 
+        $response = 0;
+
         foreach($json_response["balances"] as $balance)
         {
             if($balance["asset"] == "USDT")
             {
-                $json_response = $balance["free"];
-                break;
+                $response = $response + $balance["free"];
+            }
+
+            if($balance["asset"] == "COMP")
+            {
+                # get current price
+                $price = BinanceService::getPrice("COMPUSDT");
+                $price = $price["price"] * $balance["free"];
+
+                $response = $price + $response;
             }
         }
 
         # return response
-        return $json_response;
+        return $response;
     }
 
     # play with crypto
@@ -669,7 +690,7 @@ class BinanceService extends Command
         $order = Order::latest()->first();
 
         # 
-        if($order != null && $order->out == null)
+        if($order != null && $order->out == null && $order->amount != 0)
         {    
             # update crypto
             $crypto = [
@@ -768,6 +789,20 @@ class BinanceService extends Command
             sleep(10);
         }
 
+        if(BinanceService::getOrders($crypto["name"], $crypto["last"], 1) < 3)
+        {
+            # register new order
+            $order = new Order;
+            $order->name = $crypto["name"];
+            $order->in = $crypto["last"];
+            $order->amount = 0;
+            $order->out = null;
+            $order->earn = null;
+            $order->save();
+
+            return BinanceService::goodBuy($crypto["name"], $cash);
+        }
+
         # buy crypto
         $buy = BinanceService::buy($crypto["name"], $cash);
         Log::debug("Buy crypto", $buy);
@@ -806,7 +841,7 @@ class BinanceService extends Command
         Log::debug("get first price", $crypto);
 
         # check percent change
-        while($crypto["percent_change"] < 0.4)
+        while($crypto["percent_change"] < 0.67)
         {
             # timeout
             sleep(10);
@@ -873,7 +908,7 @@ class BinanceService extends Command
         # get current percent change
         $crypto["percent_change"] = BinanceService::getPercentChange($crypto);
 
-        $earn = round($sell["cummulativeQuoteQty"] - 300, 4, PHP_ROUND_HALF_DOWN);
+        $earn = round($sell["cummulativeQuoteQty"] - 350, 4, PHP_ROUND_HALF_DOWN);
 
         $order->out = $crypto["last"];
         $order->earn = $earn;

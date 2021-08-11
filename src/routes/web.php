@@ -15,7 +15,7 @@ use App\Http\Controllers\BinanceController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('layouts/app', ['title' => 'Home', 'page' => 'index']);
 });
 
 Route::get('/play', function () {
