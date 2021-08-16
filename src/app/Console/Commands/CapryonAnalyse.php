@@ -38,7 +38,29 @@ class CapryonAnalyse extends Command
      */
     public function handle()
     {
-        BinanceService::bid("COMPUSDT", 350);
+        // set all crypto
+        $all_crypto = [
+            "COMPUSDT",
+            "SUSHIUSDT",
+            "SANDUSDT",
+            "UNIUSDT",
+            "YFIUSDT",
+            "SNXUSDT",
+            "AAVEUSDT",
+            "KNCUSDT",
+            "MKRUSDT",
+            "ZRXUSDT",
+            "BALUSDT",
+            "UMAUSDT",
+            "CRVUSDT",
+            "ALPHAUSDT",
+            "RENUSDT"
+        ];
+
+        // get best crypto
+        $crypto = BinanceService::getBestCrypto($all_crypto);
+
+        BinanceService::bid($crypto, 380);
 
         return 1;
     }

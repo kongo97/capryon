@@ -566,6 +566,15 @@ class BinanceService extends Command
 
                 $response = $price + $response;
             }
+
+            if($balance["asset"] == "SUSHI")
+            {
+                # get current price
+                $price = BinanceService::getPrice("SUSHIUSDT");
+                $price = $price["price"] * $balance["free"];
+
+                $response = $price + $response;
+            }
         }
 
         # return response
@@ -916,6 +925,52 @@ class BinanceService extends Command
 
         # return last crypto status
         return $crypto;
+    }
+
+    #
+    public static function getBestCrypto($all_crypto)
+    {
+        # get latest order
+        $order = Order::latest()->first();
+
+        if($order != null && $order->out == null && $order->amount != 0)
+        {
+            return $order->name;
+        }
+
+        foreach($all_crypto as $crypto)
+        {
+            # get percent price change (from 24h)
+            # {{url}}/api/v3/ticker/24hr?symbol=COMPUSDT
+            try {
+                $response = Http::get(env('BINANCE_API')."/api/v3/ticker/24hr?symbol=$crypto");
+            }
+            # connection error
+            catch(GuzzleHttp\Exception\ConnectException $e) {
+                Log::debug('Connection error', $e);
+                return false;
+            }
+            # bad response error
+            catch(GuzzleHttp\Exception\BadResponseException $e) {
+                Log::debug('Response error', $e);
+                return false;
+            }
+            # request error
+            catch(GuzzleHttp\Exception\RequestException $e) {
+                Log::debug('Request error', $e);
+                return false;
+            }
+
+            if($response["priceChangePercent"] > 1 && $response["priceChangePercent"] < 8)
+            {
+                $best_crypto = $response["symbol"];
+
+                return $best_crypto;
+            }
+            
+        }
+
+        return null;
     }
 
     # bid method

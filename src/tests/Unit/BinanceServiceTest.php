@@ -78,6 +78,34 @@ class BinanceServiceTest extends TestCase
         $this->assertNotNull($price);
     }
 
+    // ./vendor/bin/phpunit --filter testGetBestCrypto tests/Unit/BinanceServiceTest.php
+    public function testGetBestCrypto()
+    {
+        $all_crypto = [
+            "COMPUSDT",
+            "SUSHIUSDT",
+            "SANDUSDT",
+            "UNIUSDT",
+            "YFIUSDT",
+            "SNXUSDT",
+            "AAVEUSDT",
+            "KNCUSDT",
+            "MKRUSDT",
+            "ZRXUSDT",
+            "BALUSDT",
+            "UMAUSDT",
+            "CRVUSDT",
+            "ALPHAUSDT",
+            "RENUSDT"
+        ];
+
+        $price = BinanceService::getBestCrypto($all_crypto);
+
+        echo $price;
+
+        $this->assertNotNull($price);
+    }
+
     // ./vendor/bin/phpunit --filter testSell tests/Unit/BinanceServiceTest.php
     public function testSell()
     {
