@@ -575,6 +575,26 @@ class BinanceService extends Command
 
                 $response = $price + $response;
             }
+
+            if($balance["asset"] == "SAND")
+            {
+                # get current price
+                $price = BinanceService::getPrice("SANDUSDT");
+                $price = $price["price"] * $balance["free"];
+
+                $response = $price + $response;
+            }
+
+            if($balance["asset"] == "BAL")
+            {
+                # get current price
+                $price = BinanceService::getPrice("BALUSDT");
+                $price = $price["price"] * $balance["free"];
+
+                $response = $price + $response;
+            }
+
+            
         }
 
         # return response
@@ -917,7 +937,7 @@ class BinanceService extends Command
         # get current percent change
         $crypto["percent_change"] = BinanceService::getPercentChange($crypto);
 
-        $earn = round($sell["cummulativeQuoteQty"] - 350, 4, PHP_ROUND_HALF_DOWN);
+        $earn = round($sell["cummulativeQuoteQty"] - 380, 4, PHP_ROUND_HALF_DOWN);
 
         $order->out = $crypto["last"];
         $order->earn = $earn;
@@ -961,7 +981,7 @@ class BinanceService extends Command
                 return false;
             }
 
-            if($response["priceChangePercent"] > 1 && $response["priceChangePercent"] < 8)
+            if($response["priceChangePercent"] > 3 && $response["priceChangePercent"] < 8)
             {
                 $best_crypto = $response["symbol"];
 
