@@ -26,6 +26,12 @@ Route::get('/balance', function () {
     return view('balance.index');
 });
 
+Route::get('/charts/{crypto}', function ($crypto) {
+    return view('charts.index', ['crypto' => $crypto]);
+});
+
 Route::post('/price', [BinanceController::class, 'getPrice']);
 
 Route::get('/_balance', [BinanceController::class, 'getBalance']);
+
+Route::get('/chart/{crypto}', [BinanceController::class, 'getChart']);

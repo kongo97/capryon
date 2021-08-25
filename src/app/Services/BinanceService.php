@@ -960,37 +960,106 @@ class BinanceService extends Command
 
         foreach($all_crypto as $crypto)
         {
-            # get percent price change (from 24h)
-            # {{url}}/api/v3/ticker/24hr?symbol=COMPUSDT
-            try {
-                $response = Http::get(env('BINANCE_API')."/api/v3/ticker/24hr?symbol=$crypto");
-            }
-            # connection error
-            catch(GuzzleHttp\Exception\ConnectException $e) {
-                Log::debug('Connection error', $e);
-                return false;
-            }
-            # bad response error
-            catch(GuzzleHttp\Exception\BadResponseException $e) {
-                Log::debug('Response error', $e);
-                return false;
-            }
-            # request error
-            catch(GuzzleHttp\Exception\RequestException $e) {
-                Log::debug('Request error', $e);
-                return false;
-            }
+            $chart_data = BinanceService::getChart($crypto);
 
-            if($response["priceChangePercent"] > 3 && $response["priceChangePercent"] < 8)
+            if($chart_data["up_count"] >= 3)
             {
-                $best_crypto = $response["symbol"];
-
-                return $best_crypto;
+                return $crypto;
             }
             
         }
 
         return null;
+    }
+
+    # get crypto chart
+    public static function getChart($crypto)
+    {
+        # get percent price change (from 24h)
+        # {{url}}/api/v3/klines?symbol=SUSHIUSDT&interval=1m&limit=500
+        try {
+            $response = Http::get(env('BINANCE_API')."/api/v3/klines?symbol=$crypto&interval=1m&limit=15");
+        }
+        # connection error
+        catch(GuzzleHttp\Exception\ConnectException $e) {
+            Log::debug('Connection error', $e);
+            return false;
+        }
+        # bad response error
+        catch(GuzzleHttp\Exception\BadResponseException $e) {
+            Log::debug('Response error', $e);
+            return false;
+        }
+        # request error
+        catch(GuzzleHttp\Exception\RequestException $e) {
+            Log::debug('Request error', $e);
+            return false;
+        }
+
+        $ticks = json_decode($response, true);
+
+        $chart_data = [
+            "open_time" => [],
+            "open" => [],
+            "high" => [],
+            "low" => [],
+            "close" => [],
+            "volume" => [],
+            "close_time" => [],
+            "quote_asset_volume" => [],
+            "number_of_trades" => [],
+            "taker_buy_base_asset_volume" => [],
+            "taker_buy_quote_asset_volume" => [],
+            "ignore" => [],
+            "name" => $crypto,
+        ];
+
+        foreach($ticks as $tick)
+        {
+            $chart_data["open_time"][] = date('Y-m-d H:i:s', $tick[0]/1000);
+            $chart_data["open"][] = date('Y-m-d H:i:s', $tick[1]/1000);
+            $chart_data["high"][] = $tick[2];
+            $chart_data["low"][] = $tick[3];
+            $chart_data["close"][] = $tick[4];
+            $chart_data["volume"][] = $tick[5];
+            $chart_data["close_time"][] = date('Y-m-d H:i:s', $tick[6]/1000);
+            $chart_data["quote_asset_volume"][] = $tick[7];
+            $chart_data["number_of_trades"][] = $tick[8];
+            $chart_data["taker_buy_base_asset_volume"][] = $tick[9];
+            $chart_data["taker_buy_quote_asset_volume"][] = $tick[10];
+            $chart_data["ignore"][] = $tick[11];
+        }
+
+        $reverse = array_reverse($chart_data["close"]);
+
+        $count = 0;
+        $last_greatest = []; 
+
+        foreach($reverse as $tick)
+        {
+            if($count == 0)
+            {
+                $last_greatest[] = $tick;
+                $count++;
+
+                continue;
+            }
+
+            if($last_greatest[$count-1] >= $tick)
+            {
+                $last_greatest[] = $tick;
+            }
+            else
+            {
+                break;
+            }
+
+            $count++;
+        }
+
+        $chart_data["up_count"] = count($last_greatest);
+
+        return json_encode($chart_data);
     }
 
     # bid method

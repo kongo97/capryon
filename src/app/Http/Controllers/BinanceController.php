@@ -32,6 +32,29 @@ class BinanceController extends Controller
         return json_encode($response);
     }
 
+    public static function getChart($crypto)
+    {
+        # set default response
+        $response = [
+            "error" => true,
+            "data" => []
+        ];
+
+        $chart_data = BinanceService::getChart($crypto);
+
+        if($chart_data === false)
+        {
+            return json_encode($response);
+        }
+
+        $response = [
+            "error" => false,
+            "data" => $chart_data
+        ];
+
+        return json_encode($response);
+    }
+
     public function getBalance(Request $request)
     {
         # set default response

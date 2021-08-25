@@ -60,7 +60,10 @@ class CapryonAnalyse extends Command
         // get best crypto
         $crypto = BinanceService::getBestCrypto($all_crypto);
 
-        BinanceService::bid($crypto, 380);
+        if($crypto != null)
+        {
+            BinanceService::bid($crypto, 380);
+        }
 
         return 1;
     }
