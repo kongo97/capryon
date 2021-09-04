@@ -35,3 +35,11 @@ Route::post('/price', [BinanceController::class, 'getPrice']);
 Route::get('/_balance', [BinanceController::class, 'getBalance']);
 
 Route::get('/chart/{crypto}', [BinanceController::class, 'getChart']);
+
+Route::get('/controller', function () {
+    return view('controller.index');
+});
+
+Route::get('/control', [BinanceController::class, 'getController']);
+
+Route::get('/play/{crypto}', [BinanceController::class, 'play']);

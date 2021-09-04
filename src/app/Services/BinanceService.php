@@ -558,6 +558,7 @@ class BinanceService extends Command
                 $response = $response + $balance["free"];
             }
 
+            /*
             if($balance["asset"] == "COMP")
             {
                 # get current price
@@ -594,6 +595,33 @@ class BinanceService extends Command
                 $response = $price + $response;
             }
 
+            if($balance["asset"] == "UNI")
+            {
+                # get current price
+                $price = BinanceService::getPrice("UNIUSDT");
+                $price = $price["price"] * $balance["free"];
+
+                $response = $price + $response;
+            }
+
+            if($balance["asset"] == "MKR")
+            {
+                # get current price
+                $price = BinanceService::getPrice("MKRUSDT");
+                $price = $price["price"] * $balance["free"];
+
+                $response = $price + $response;
+            }
+
+            if($balance["asset"] == "SNX")
+            {
+                # get current price
+                $price = BinanceService::getPrice("SNXUSDT");
+                $price = $price["price"] * $balance["free"];
+
+                $response = $price + $response;
+            }
+            */
             
         }
 
@@ -752,70 +780,36 @@ class BinanceService extends Command
             "percent_change" => 0,
         ];
 
-        # get current percent change
-        $crypto["percent_change"] = BinanceService::getPercentChange($crypto);
-
         Log::debug("get first price", $crypto);
 
-        # check percent change
-        while($crypto["percent_change"] > -0.4)
+
+        try
         {
-            try
-            {
-                # get first price
-                $price = BinanceService::getPrice($name);
-            }
-            catch(Exception $ex)
-            {
-                Log::debug($ex);
+            # get first price
+            $price = BinanceService::getPrice($name);
+        }
+        catch(Exception $ex)
+        {
+            Log::debug($ex);
 
-                # skip
-                continue;
-            }
+            # skip
+            die();
+        }
 
-            if($price == null)
-            {
-                # skip
-                continue;
-            }
+        if($price == null)
+        {
+            # skip
+            die();
+        }
 
-            # update crypto
-            $crypto["last"] = $price["price"];
-            $crypto["percent_change"] = BinanceService::getPercentChange($crypto);
+        # update crypto
+        $crypto["last"] = $price["price"];
+        $crypto["percent_change"] = BinanceService::getPercentChange($crypto);
 
-            # -10
-            if($crypto["percent_change"] < -10)
-            {
-                Log::debug("crypto is going down [-10%]", $crypto);
-            }
-
-            # -5
-            elseif($crypto["percent_change"] < -5)
-            {
-                Log::debug("crypto is going down [-5%]", $crypto);
-            }
-
-            # 0
-            elseif($crypto["percent_change"] < 0)
-            {
-                Log::debug("crypto is going down [-0%]", $crypto);
-            }
-
-            # 0.25
-            elseif($crypto["percent_change"] > 0.25)
-            {
-                Log::debug("crypto is going up [+0.25%]", $crypto);
-
-                return BinanceService::goodBuy($name, $cash);
-            }
-
-            else
-            {
-                Log::debug("crypto is going up [+".$crypto["percent_change"]."%]", $crypto);
-            }
-
-            # timeout
-            sleep(10);
+        if($crypto["percent_change"] < 0)
+        {
+            Log::debug("crypto is going down [-".$crypto["percent_change"]."%]", $crypto);
+            die();
         }
 
         if(BinanceService::getOrders($crypto["name"], $crypto["last"], 1) < 3)
@@ -829,7 +823,8 @@ class BinanceService extends Command
             $order->earn = null;
             $order->save();
 
-            return BinanceService::goodBuy($crypto["name"], $cash);
+            Log::debug("crypto is going too up, restart...");
+            die();
         }
 
         # buy crypto
@@ -937,7 +932,7 @@ class BinanceService extends Command
         # get current percent change
         $crypto["percent_change"] = BinanceService::getPercentChange($crypto);
 
-        $earn = round($sell["cummulativeQuoteQty"] - 380, 4, PHP_ROUND_HALF_DOWN);
+        $earn = round($sell["cummulativeQuoteQty"] - 300, 4, PHP_ROUND_HALF_DOWN);
 
         $order->out = $crypto["last"];
         $order->earn = $earn;
@@ -958,27 +953,32 @@ class BinanceService extends Command
             return $order->name;
         }
 
+        $max_pointer = 0;
+        $best = null;
+
         foreach($all_crypto as $crypto)
         {
             $chart_data = BinanceService::getChart($crypto);
 
-            if($chart_data["up_count"] >= 3)
+            $chart_data = json_decode($chart_data, true);
+
+            if($chart_data["end"] > $chart_data["start"] && $chart_data["up_count"] > 2)//if($chart_data["up_count"] > 3)
             {
-                return $crypto;
+                $best = $max_pointer < $chart_data["up_count"] ? $crypto : $best;
+                $max_pointer = $max_pointer < $chart_data["up_count"] ? $chart_data["up_count"] : $max_pointer;
             }
-            
         }
 
-        return null;
+        return $best;
     }
 
     # get crypto chart
-    public static function getChart($crypto)
+    public static function getChart($crypto, $interval="15m", $limit="9")
     {
         # get percent price change (from 24h)
         # {{url}}/api/v3/klines?symbol=SUSHIUSDT&interval=1m&limit=500
         try {
-            $response = Http::get(env('BINANCE_API')."/api/v3/klines?symbol=$crypto&interval=1m&limit=15");
+            $response = Http::get(env('BINANCE_API')."/api/v3/klines?symbol=$crypto&interval=$interval&limit=$limit");
         }
         # connection error
         catch(GuzzleHttp\Exception\ConnectException $e) {
@@ -1012,15 +1012,20 @@ class BinanceService extends Command
             "taker_buy_quote_asset_volume" => [],
             "ignore" => [],
             "name" => $crypto,
+            "start" => null,
+            "end" => null,
+            "max" => null,
+            "min" => null,
         ];
 
         foreach($ticks as $tick)
         {
             $chart_data["open_time"][] = date('Y-m-d H:i:s', $tick[0]/1000);
-            $chart_data["open"][] = date('Y-m-d H:i:s', $tick[1]/1000);
+            $chart_data["open"][] = $tick[1];
             $chart_data["high"][] = $tick[2];
             $chart_data["low"][] = $tick[3];
             $chart_data["close"][] = $tick[4];
+            $chart_data["tick_average"][] = $tick[4] > $tick[1] ? ($tick[4] - $tick[1]) / 2 : ($tick[1] - $tick[4]) / 2;
             $chart_data["volume"][] = $tick[5];
             $chart_data["close_time"][] = date('Y-m-d H:i:s', $tick[6]/1000);
             $chart_data["quote_asset_volume"][] = $tick[7];
@@ -1028,6 +1033,33 @@ class BinanceService extends Command
             $chart_data["taker_buy_base_asset_volume"][] = $tick[9];
             $chart_data["taker_buy_quote_asset_volume"][] = $tick[10];
             $chart_data["ignore"][] = $tick[11];
+
+            if($chart_data["start"] == null)
+            {
+                $chart_data["start"] = $tick[4];
+            }
+
+            # max
+            if($chart_data["max"] == null)
+            {
+                $chart_data["max"] = $tick[2];
+            }
+            elseif($chart_data["max"] < $tick[2])
+            {
+                $chart_data["max"] = $tick[2];
+            }
+
+            #min
+            if($chart_data["min"] == null)
+            {
+                $chart_data["min"] = $tick[2];
+            }
+            elseif($chart_data["min"] > $tick[2])
+            {
+                $chart_data["min"] = $tick[2];
+            }
+
+            $chart_data["earn"][] = "".round(((300 / $tick[1]) * $tick[4]) - 300, 2);
         }
 
         $reverse = array_reverse($chart_data["close"]);
@@ -1041,6 +1073,8 @@ class BinanceService extends Command
             {
                 $last_greatest[] = $tick;
                 $count++;
+
+                $chart_data["end"] = $tick;
 
                 continue;
             }
@@ -1058,6 +1092,10 @@ class BinanceService extends Command
         }
 
         $chart_data["up_count"] = count($last_greatest);
+
+        $chart_data["percent_change"] = "".round((($chart_data["end"] - $chart_data["start"])/ $chart_data["start"]) * 100, 4);
+
+        $chart_data["earn_tot"] = "".round(((300 / $chart_data["start"]) * $chart_data["end"]) - 300, 2);
 
         return json_encode($chart_data);
     }
@@ -1089,5 +1127,36 @@ class BinanceService extends Command
         $crypto = BinanceService::goodSell($order->id);
 
         return $crypto;
+    }
+
+    public static function getControl($interval="15m", $limit="3")
+    {
+        // set all crypto
+        $all_crypto = [
+            "COMPUSDT",
+            "SUSHIUSDT",
+            "SANDUSDT",
+            "UNIUSDT",
+            "YFIUSDT",
+            "SNXUSDT",
+            "AAVEUSDT",
+            "KNCUSDT",
+            "MKRUSDT",
+            "ZRXUSDT",
+            "BALUSDT",
+            "UMAUSDT",
+            "CRVUSDT",
+            "ALPHAUSDT",
+            "RENUSDT"
+        ];
+
+        $chart_data = [];
+
+        foreach($all_crypto as $crypto)
+        {
+            $chart_data[] = json_decode(BinanceService::getChart($crypto, $interval, $limit));
+        }
+
+        return $chart_data;
     }
 }

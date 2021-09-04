@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\BinanceService;
+use Illuminate\Support\Facades\Log;
 
 class CapryonAnalyse extends Command
 {
@@ -62,8 +63,10 @@ class CapryonAnalyse extends Command
 
         if($crypto != null)
         {
-            BinanceService::bid($crypto, 380);
+            BinanceService::bid($crypto, 300);
         }
+
+        Log::debug("No good crypto...");
 
         return 1;
     }

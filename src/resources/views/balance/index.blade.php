@@ -9,7 +9,7 @@
 <body>
 <style>
   #balance {
-    font-size: 10em;
+    font-size: 15em;
     text-align: center;
   }
 </style>
@@ -61,7 +61,9 @@
         },
       },
       mounted () {
-        this.read_balance = this.getBalance();
+        //this.read_balance = this.getBalance();
+        this.read_balance = setInterval(() => this.getBalance(), 10000);
+
       },
     })
   </script>
