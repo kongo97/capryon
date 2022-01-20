@@ -119,7 +119,7 @@ class BinanceServiceTest extends TestCase
     // ./vendor/bin/phpunit --filter testSell tests/Unit/BinanceServiceTest.php
     public function testSell()
     {
-        $price = BinanceService::sell("COMPUSDT", 1);
+        $price = BinanceService::sell("COMPUSDT", 0.044);
 
         print_r($price);
 
@@ -174,5 +174,15 @@ class BinanceServiceTest extends TestCase
         $price = BinanceService::goodSell(4);
 
         $this->assertNotNull($price);
+    }
+
+    // ./vendor/bin/phpunit --filter testGetControl tests/Unit/BinanceServiceTest.php
+    public function testGetControl()
+    {
+        $all_crypto = BinanceService::getControl("5m", 20);
+
+        echo json_encode($all_crypto, JSON_PRETTY_PRINT);
+
+        $this->assertNotNull($all_crypto);
     }
 }

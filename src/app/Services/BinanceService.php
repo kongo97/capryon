@@ -53,18 +53,18 @@ class BinanceService extends Command
                 $name = str_replace("USDT", "", $crypto["symbol"]);
 
                 # add crypto
-                $response = [
+                $response[] = [
                     "symbol" => $crypto["symbol"],
                     "name" => str_replace("USDT", "", $crypto["symbol"]),
                 ];
 
                 # add current crypto to good crypto
-                Crypto::updateOrCreate($response, []);
+                //Crypto::updateOrCreate($response, []);
             }
         }
 
         # return response
-        return true;
+        return $response;
     }
 
     # get current average price
@@ -1100,6 +1100,104 @@ class BinanceService extends Command
         return json_encode($chart_data);
     }
 
+    # get crypto chart
+    public static function history($crypto, $interval="15m", $limit="9")
+    {
+        # set response
+        $history = [
+            "name" => null,
+            "open_time" => null,
+            "open" => null,
+            "close" => null,
+            "close_time" => null,
+            "min" => null,
+            "max" => null,
+            "directions" => []
+        ];
+
+        # get percent price change (from 24h)
+        # {{url}}/api/v3/klines?symbol=SUSHIUSDT&interval=1m&limit=500
+        try {
+            $response = Http::get(env('BINANCE_API')."/api/v3/klines?symbol=$crypto&interval=$interval&limit=$limit");
+        }
+        # connection error
+        catch(GuzzleHttp\Exception\ConnectException $e) {
+            Log::debug('Connection error', $e);
+            return null;
+        }
+        # bad response error
+        catch(GuzzleHttp\Exception\BadResponseException $e) {
+            Log::debug('Response error', $e);
+            return null;
+        }
+        # request error
+        catch(GuzzleHttp\Exception\RequestException $e) {
+            Log::debug('Request error', $e);
+            return null;
+        }
+
+        $ticks = json_decode($response, true);
+
+        $counter = 0;
+
+        foreach($ticks as $tick)
+        {   
+            if($counter == 0)
+            {
+                $history["name"] = $crypto;
+                $history["open_time"] = date('Y-m-d H:i:s', $tick[0]/1000);
+                $history["open"] = $tick[1];
+                $history["min"] = $tick[3];
+                $history["max"] = $tick[2];
+            }
+
+            # direction
+            $history["directions"][] = [
+                "direction" => $tick[4] > $tick[1] ? "up" : "down",
+                "delta" => $tick[4] - $tick[1]
+            ];
+
+            $latest_delta = 0; 
+
+            for($index = count($history["directions"]) - 1; $index >= 0; $index--)
+            {
+                if($history["directions"][$index]["direction"] != "up")
+                {
+                    //$latest_delta = 0;
+                    break;
+                }
+
+                $latest_delta += $history["directions"][$index]["delta"]; 
+            }
+
+            $history["latest_delta"] = $latest_delta;
+
+            # min
+            if($history["min"] > $tick[3])
+            {
+                $history["min"] = $tick[3];
+            }
+
+            # max
+            if($history["max"] < $tick[2])
+            {
+                $history["max"] = $tick[2];
+            }
+
+            if($counter + 1 == count($ticks))
+            {
+                $percent_change = round((($tick[4] - $tick[1])/ $tick[1]) * 100, 4);
+                $history["close"] = $tick[4];
+                $history["percent_change"] = $percent_change;
+                $history["close_time"] = date('Y-m-d H:i:s', $tick[6]/1000);
+            }
+
+            $counter++;
+        }
+
+        return $history;
+    }
+
     # bid method
     public static function bid($name, $cash)
     {
@@ -1157,6 +1255,6 @@ class BinanceService extends Command
             $chart_data[] = json_decode(BinanceService::getChart($crypto, $interval, $limit));
         }
 
-        return $chart_data;
+        return $chart_data == [] ? null : $chart_data;
     }
 }

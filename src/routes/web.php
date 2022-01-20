@@ -40,6 +40,8 @@ Route::get('/controller', function () {
     return view('controller.index');
 });
 
+Route::get('/predict', [BinanceController::class, 'predict']);
+
 Route::get('/control', [BinanceController::class, 'getController']);
 
 Route::get('/play/{crypto}', [BinanceController::class, 'play']);

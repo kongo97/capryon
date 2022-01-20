@@ -40,7 +40,7 @@ class BinanceController extends Controller
             "data" => []
         ];
 
-        $chart_data = BinanceService::getChart($crypto, "1h", (24*7*4));
+        $chart_data = BinanceService::getChart($crypto, "1m", 60);
 
         if($chart_data === false)
         {
@@ -107,5 +107,40 @@ class BinanceController extends Controller
         ];
 
         return json_encode($response);
+    }
+
+    public function predict()
+    {
+        # set default response
+        $response = [
+            "error" => true,
+            "data" => []
+        ];
+
+        $cryptos = BinanceService::getAllCrypto();
+
+        if($cryptos === false)
+        {
+            return false;
+        }
+
+        $histories = [];
+
+        foreach($cryptos as $crypto)
+        {
+            $history = BinanceService::history($crypto["symbol"], "5m", 1);
+
+            if($crypto["name"]!="STORM" && $crypto["name"]!="BCHSV")
+            {
+                $histories[$crypto["name"]] = $history;
+            }
+        }
+
+        $keys = array_column($histories, 'percent_change');
+        array_multisort($keys, SORT_DESC, $histories);
+
+        //return json_encode(last($histories));
+
+        return view('predict.index', ["currencies" => $cryptos, "histories" => $histories]);
     }
 }

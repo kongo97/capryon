@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\BinanceService;
+use App\Services\CapryonService;
 use Illuminate\Support\Facades\Log;
 
 class CapryonAnalyse extends Command
@@ -13,7 +14,7 @@ class CapryonAnalyse extends Command
      *
      * @var string
      */
-    protected $signature = 'capryon:bid';
+    protected $signature = 'capryon:earn';
 
     /**
      * The console command description.
@@ -39,34 +40,7 @@ class CapryonAnalyse extends Command
      */
     public function handle()
     {
-        // set all crypto
-        $all_crypto = [
-            "COMPUSDT",
-            "SUSHIUSDT",
-            "SANDUSDT",
-            "UNIUSDT",
-            "YFIUSDT",
-            "SNXUSDT",
-            "AAVEUSDT",
-            "KNCUSDT",
-            "MKRUSDT",
-            "ZRXUSDT",
-            "BALUSDT",
-            "UMAUSDT",
-            "CRVUSDT",
-            "ALPHAUSDT",
-            "RENUSDT"
-        ];
-
-        // get best crypto
-        $crypto = BinanceService::getBestCrypto($all_crypto);
-
-        if($crypto != null)
-        {
-            BinanceService::bid($crypto, 300);
-        }
-
-        Log::debug("No good crypto...");
+        CapryonService::earn(300);
 
         return 1;
     }
