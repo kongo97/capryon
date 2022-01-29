@@ -1,43 +1,23 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
     <head>
-        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
-        <title>Capryon</title>
-
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Capryon &bull; {{ $title }}</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+        <link rel="stylesheet" href="{{ URL::asset('css/style.css') }}">
         <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
         <!-- axios -->
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-        <!-- chart js -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js" integrity="sha512-Wt1bJGtlnMtGP0dqNFH1xlkLBNpEodaiQ8ZN5JLA5wpc1sUlk/O5uuOMNgvzddzkpvZ9GLyYNa8w2s7rqiTk5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     </head>
-    <body style="font-family: 'Black Ops one' !important"> 
-        <style>
-            button {
-                font-family: 'Black Ops one';
-            }
-            label {
-                font-family: 'Black Ops one';
-            }
-            input {
-                font-family: 'Black Ops one';
-            }
-        </style>
-        <div id="app">
-            <v-app>
-                <v-main>
+    <body> 
+        @include('navbar')
 
-                @include('navbar')
-
-                </v-main>
-            </v-app>
+        <div id="app" class="columns">
+            <div class="columns is-multiline column is-12">
+                @include($page)
+            </div>
         </div>
-        @yield('vue')
-
-        @include('footer')
 
         @include('scripts')  
     </body>

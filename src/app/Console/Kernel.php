@@ -26,6 +26,12 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         //$schedule->exec("php artisan capryon:earn")->everyMinute()->withoutOverlapping();
+
+        // daily update
+        $schedule->exec("./vendor/bin/phpunit --filter testDailyUpdate tests/Unit/CapryonServiceTest.php")->everyMinute()->withoutOverlapping();
+
+        // quick update
+        $schedule->exec("./vendor/bin/phpunit --filter testQuickUpdate tests/Unit/CapryonServiceTest.php")->everyMinute()->withoutOverlapping();
     }
 
     /**

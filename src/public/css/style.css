@@ -1,0 +1,41 @@
+.vertical-bar
+{
+    width: 4px;
+    height: var(--height);
+    margin-left: 5px;
+    float: left;
+    border-radius: 3px;
+    margin-top: var(--margin);
+}
+.vertical-bar:hover
+{
+    width: 5px;
+    margin-left: 4px;
+}
+
+.green
+{
+    background-color: green;
+}
+
+.red
+{
+    background-color: red;
+}
+
+.bars-container
+{
+    height: 100px;
+    width: auto;
+}
+
+.table td, .table th {
+    border: 1px solid #dbdbdb;
+      border-top-width: 1px;
+      border-right-width: 1px;
+      border-bottom-width: 1px;
+      border-left-width: 1px;
+    border-width: 0 0 1px;
+    padding: .5em .75em;
+    vertical-align: middle;
+  }

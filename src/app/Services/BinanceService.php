@@ -1103,17 +1103,10 @@ class BinanceService extends Command
     # get crypto chart
     public static function history($crypto, $interval="15m", $limit="9")
     {
+        $crypto = strtoupper($crypto);
+
         # set response
-        $history = [
-            "name" => null,
-            "open_time" => null,
-            "open" => null,
-            "close" => null,
-            "close_time" => null,
-            "min" => null,
-            "max" => null,
-            "directions" => []
-        ];
+        $history = [];
 
         # get percent price change (from 24h)
         # {{url}}/api/v3/klines?symbol=SUSHIUSDT&interval=1m&limit=500
@@ -1138,64 +1131,113 @@ class BinanceService extends Command
 
         $ticks = json_decode($response, true);
 
-        $counter = 0;
+        $min = null;
+        $max = null;
 
         foreach($ticks as $tick)
-        {   
-            if($counter == 0)
+        {
+            // min
+            if($min == null)
             {
-                $history["name"] = $crypto;
-                $history["open_time"] = date('Y-m-d H:i:s', $tick[0]/1000);
-                $history["open"] = $tick[1];
-                $history["min"] = $tick[3];
-                $history["max"] = $tick[2];
+                $min = $tick[3];
+            }
+            else
+            {
+                $min = $min < $tick[3] ? $min : $tick[3];
             }
 
-            # direction
-            $history["directions"][] = [
-                "direction" => $tick[4] > $tick[1] ? "up" : "down",
-                "delta" => $tick[4] - $tick[1]
+            // max
+            if($max == null)
+            {
+                $max = $tick[2];
+            }
+            else
+            {
+                $max = $max > $tick[2] ? $max : $tick[2];
+            }
+
+            $history[] = [
+                "name" => $crypto,
+                "open" => $tick[1],
+                "close" => $tick[4],
+                "min" => $tick[3],
+                "max" => $tick[2],
+                "delta" => $tick[4] - $tick[1],
+                "open_time" => date('Y-m-d H:i:s', $tick[0]/1000),
+                "close_time" => date('Y-m-d H:i:s', $tick[6]/1000)
             ];
-
-            $latest_delta = 0; 
-
-            for($index = count($history["directions"]) - 1; $index >= 0; $index--)
-            {
-                if($history["directions"][$index]["direction"] != "up")
-                {
-                    //$latest_delta = 0;
-                    break;
-                }
-
-                $latest_delta += $history["directions"][$index]["delta"]; 
-            }
-
-            $history["latest_delta"] = $latest_delta;
-
-            # min
-            if($history["min"] > $tick[3])
-            {
-                $history["min"] = $tick[3];
-            }
-
-            # max
-            if($history["max"] < $tick[2])
-            {
-                $history["max"] = $tick[2];
-            }
-
-            if($counter + 1 == count($ticks))
-            {
-                $percent_change = round((($tick[4] - $tick[1])/ $tick[1]) * 100, 4);
-                $history["close"] = $tick[4];
-                $history["percent_change"] = $percent_change;
-                $history["close_time"] = date('Y-m-d H:i:s', $tick[6]/1000);
-            }
-
-            $counter++;
         }
 
-        return $history;
+        $compressed = [];
+
+        $index = 0;
+
+        foreach($history as $tick)
+        {
+            // case 0
+            if($index == 0)
+            {
+                $compressed[] = $tick;
+                $index++;
+                continue;
+            }
+
+            // down && down
+            if($tick["delta"] <= 0 && $compressed[$index-1]["delta"] <= 0)
+            {
+                $tmp = [
+                    "name" => $crypto,
+                    "open" => $compressed[$index-1]['open'],
+                    "close" => $tick['close'],
+                    "min" => min([$compressed[$index-1]['min'], $tick['min']]),
+                    "max" => max([$compressed[$index-1]['max'], $tick['max']]),
+                    "delta" => $tick['close'] - $compressed[$index-1]['open'],
+                    "open_time" => $compressed[$index-1]['open_time'],
+                    "close_time" => $tick['close_time']
+                ];
+
+                $compressed[$index-1] = $tmp;
+            }
+            // down && up
+            elseif($tick["delta"] <= 0 && $compressed[$index-1]["delta"] > 0)
+            {
+                $compressed[] = $tick;
+                $index++;
+            }
+            // up && down
+            elseif($tick["delta"] > 0 && $compressed[$index-1]["delta"] <= 0)
+            {
+                $compressed[] = $tick;   
+                $index++;
+            }
+            // up && up
+            else
+            {
+                $tmp = [
+                    "name" => $crypto,
+                    "open" => $compressed[$index-1]['open'],
+                    "close" => $tick['close'],
+                    "min" => min([$compressed[$index-1]['min'], $tick['min']]),
+                    "max" => max([$compressed[$index-1]['max'], $tick['max']]),
+                    "delta" => $tick['close'] - $compressed[$index-1]['open'],
+                    "open_time" => $compressed[$index-1]['open_time'],
+                    "close_time" => $tick['close_time']
+                ];
+
+                $compressed[$index-1] = $tmp;
+            }
+        }
+
+        $info = [
+            "min" => $min,
+            "max" => $max
+        ];
+
+        return [
+            "compressed" => $compressed,
+            "history" => $history,
+            "info" => $info,
+        ];
     }
 
     # bid method

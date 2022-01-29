@@ -1,23 +1,9 @@
-<!-- PAGE CONTAINER -->
-<div class="row">
-    <div class="col-md-12">
-    <h1 id="balance">@{{balance}} $</h1>
-    </div>
-</div>
-
 <!-- VUE -->
 @section("vue")
-<style>
-  #balance {
-    font-size: 10em;
-    text-align: center;
-  }
-</style>
 
 <script>
   var app = new Vue({
     el: '#app',
-    vuetify: new Vuetify(),
     data: {
       balance: 0,
 

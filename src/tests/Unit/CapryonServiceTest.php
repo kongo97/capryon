@@ -8,6 +8,53 @@ use Illuminate\Support\Facades\Http;
 
 class CapryonServiceTest extends TestCase
 {
+    // ./vendor/bin/phpunit --filter testAllCrypto tests/Unit/CapryonServiceTest.php
+    public function testAllCrypto()
+    {
+        $cryptos = CapryonService::allCrypto();
+
+        $this->assertNotNull($cryptos);
+    }
+
+    // ./vendor/bin/phpunit --filter testDailyUpdate tests/Unit/CapryonServiceTest.php
+    public function testDailyUpdate()
+    {
+        $cryptos = CapryonService::dailyUpdate();
+
+        $this->assertNotNull($cryptos);
+    }
+
+    // ./vendor/bin/phpunit --filter testQuickUpdate tests/Unit/CapryonServiceTest.php
+    public function testQuickUpdate()
+    {
+        $cryptos = CapryonService::quickUpdate();
+
+        $this->assertNotNull($cryptos);
+    }
+
+    // ./vendor/bin/phpunit --filter testDailyUp tests/Unit/CapryonServiceTest.php
+    public function testDailyUp()
+    {
+        $cryptos = CapryonService::dailyUp();
+
+        print_r($cryptos);
+
+        $this->assertNotNull($cryptos);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // ./vendor/bin/phpunit --filter testEarn tests/Unit/CapryonServiceTest.php
     public function testEarn()
     {

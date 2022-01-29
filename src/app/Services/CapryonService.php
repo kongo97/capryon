@@ -10,9 +10,167 @@ use App\Services\Post;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Services\BinanceService;
+use \parallel\Runtime;
 
 class CapryonService extends Command
 {
+    # get all crypto
+    public static function allCrypto()
+    {
+        $cryptos = BinanceService::getAllCrypto();
+
+        foreach($cryptos as $crypto)
+        {
+            Crypto::create([
+                'name' => strtolower($crypto["name"]),
+                'symbol' => strtolower($crypto["symbol"]),
+            ]);
+        }
+
+        return Crypto::all();
+    }
+
+    # update crypto up
+    public static function dailyUpdate()
+    {
+        $cryptos = Crypto::all();
+
+        foreach($cryptos as $crypto)
+        {
+            $daily = CapryonService::_dailyUpdate($crypto["symbol"]);
+
+            if(!$daily || $daily['start'] == 0)
+            {
+                $crypto->isDailyUpdated = false;
+                continue;
+            }
+            else
+            {
+                $delta_percent = round((($daily['price'] - $daily['start']) / $daily['start']) * 100, 2);
+
+                $crypto->isDailyUpdated = true;
+                $crypto->isDailyUp = $delta_percent > 1 ? true : false;
+                $crypto->start = $daily["start"];
+                $crypto->price = $daily["price"];
+                $crypto->delta_percent = $delta_percent;
+                $crypto->min = $daily["min"];
+                $crypto->max = $daily["max"];
+
+                // get 24h history (split 1h)
+                $history = BinanceService::history($crypto["symbol"], "1h", 24);
+
+                // get last h history (split 1h)
+                $last = BinanceService::history($crypto["symbol"], "3m", 20);
+
+                $crypto->history_24h = json_encode($history);
+                $crypto->history_1h = json_encode($last);
+            }
+
+            $crypto->save();
+        }
+
+        return Crypto::all();
+    }
+
+    # update crypto up
+    public static function quickUpdate()
+    {
+        $cryptos = Crypto::all();
+
+        foreach($cryptos as $crypto)
+        {
+            // get 24h history (split 1h)
+            $history = BinanceService::history($crypto["symbol"], "1m", 15);
+
+            $crypto->history_15m = json_encode($history);
+
+            $delta_percent = ($history['history'][count($history['history'])-1]['close'] - $history['history'][0]['open']) / $history['history'][0]['open'] * 100;
+
+            if(( ($delta_percent <= -2 && $crypto->delta_percent > 5 ) || (($crypto->max - $history['history'][count($history['history'])-1]['close'] > $history['history'][count($history['history'])-1]['close'] - $crypto->min) && $delta_percent <= -2)) && $crypto->isDailyUpdated == true ) 
+            {
+                $crypto->isQuick = true;
+            }
+            else
+            {
+                $crypto->isQuick = false;
+            }
+
+            $crypto->save();
+        }
+
+        return Crypto::all();
+    }
+
+    # is crypto daily-up?
+    public static function _dailyUpdate($symbol)
+    {
+        $symbol = strtoupper($symbol);
+
+        // get percent change (from 00:00 to now) 
+        try
+        {
+            $price_change = BinanceService::getPriceChange($symbol);
+        }
+        catch(Exception $ex)
+        {
+            return false;
+        }
+
+        $percent_change = round($price_change["priceChangePercent"], 2);
+
+        $up_crypto = [
+            "symbol" => $symbol,
+            "delta" => $percent_change,
+            "max" => $price_change["highPrice"],
+            "min" => $price_change["lowPrice"],
+            "start" => $price_change["openPrice"],
+            "price" => $price_change["lastPrice"],
+        ];
+
+        return $up_crypto;
+    }
+
+    # get all crypto
+    public static function daily()
+    {
+        return Crypto::all()->where('isDailyUpdated', true)->sortBy('delta_percent');
+    }
+
+    # get all crypto
+    public static function dailyUp()
+    {
+        return Crypto::all()->where('isDailyUp', true)->sortBy('delta_percent');
+    }
+
+    # get all crypto
+    public static function quick()
+    {
+        return Crypto::all()->where('isQuick', true)->sortBy('delta_percent');
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     # earn with best crypto
     public static function earn($cash = 300)
     {
