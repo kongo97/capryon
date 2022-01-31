@@ -73,8 +73,17 @@
 @section("vue")
 
 <script>
+  export default {
+    data:() => ({
+      active: 'guide'
+    })
+  }
+</script>
+
+<script>
   var app = new Vue({
     el: '#app',
+    active: 'guide',
     data: {
       balance: 0,
 
