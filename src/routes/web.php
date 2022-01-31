@@ -18,6 +18,8 @@ Route::get('/', function () {
     return view('layouts/app', ['title' => 'Home', 'page' => 'index']);
 });
 
+Route::get('/market', [BinanceController::class, 'market']);
+
 Route::get('/play', function () {
     return view('play.bubble');
 });
@@ -45,3 +47,7 @@ Route::get('/predict', [BinanceController::class, 'predict']);
 Route::get('/control', [BinanceController::class, 'getController']);
 
 Route::get('/play/{crypto}', [BinanceController::class, 'play']);
+
+Route::get('/dailyUp', [BinanceController::class, 'dailyUp']);
+
+Route::get('/quick', [BinanceController::class, 'quick']);

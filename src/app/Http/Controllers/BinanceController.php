@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\BinanceService;
+use App\Services\CapryonService;
+use App\Models\Crypto;
 
 class BinanceController extends Controller
 {
@@ -142,5 +144,26 @@ class BinanceController extends Controller
         //return json_encode(last($histories));
 
         return view('predict.index', ["currencies" => $cryptos, "histories" => $histories]);
+    }
+
+    public function market()
+    {
+        $daily_up = CapryonService::daily();
+
+        return view('layouts/app', ['title' => 'Market', 'page' => 'dailyUp', 'dailyUp' => $daily_up]);
+    }
+
+    public function dailyUp()
+    {
+        $daily_up = CapryonService::dailyUp();
+
+        return view('layouts/app', ['title' => 'Daily-Up', 'page' => 'dailyUp', 'dailyUp' => $daily_up]);
+    }
+
+    public function quick()
+    {
+        $daily_up = CapryonService::quick();
+
+        return view('layouts/app', ['title' => 'Quick', 'page' => 'dailyUp', 'dailyUp' => $daily_up]);
     }
 }
