@@ -2,16 +2,15 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
         <title>Capryon &bull; {{ $title }}</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
-        <link rel="stylesheet" href="{{ URL::asset('css/style.css') }}">
-        <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
-        <!-- axios -->
-        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <link href="https://unpkg.com/vuesax@4.0.1-alpha.16/dist/vuesax.min.css" rel="stylesheet">
+        <!--<link rel="stylesheet" href="{{ URL::asset('css/style.css') }}">-->
     </head>
     <body> 
         @include('navbar')
+
+        <div class="block"></div>
 
         <div id="app" class="columns">
             <div class="columns is-multiline column is-12">
@@ -20,5 +19,9 @@
         </div>
 
         @include('scripts')  
+        <script src="https://unpkg.com/vue/dist/vue.js"></script>
+        <script src="https://unpkg.com/vuesax@4.0.1-alpha.16/dist/vuesax.min.js"></script>
+        <!-- axios -->
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     </body>
 </html>
