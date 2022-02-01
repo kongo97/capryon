@@ -32,6 +32,16 @@ class BinanceServiceTest extends TestCase
         $this->assertNotNull($price);
     }
 
+    // ./vendor/bin/phpunit --filter testGetTradeList tests/Unit/BinanceServiceTest.php
+    public function testGetTradeList()
+    {
+        $price = BinanceService::getTradeList("COMPUSDT");
+
+        print_r($price);
+
+        $this->assertNotNull($price);
+    }
+
     // ./vendor/bin/phpunit --filter testGetPriceChange tests/Unit/BinanceServiceTest.php
     public function testGetPriceChange()
     {

@@ -51,3 +51,5 @@ Route::get('/play/{crypto}', [BinanceController::class, 'play']);
 Route::get('/dailyUp', [BinanceController::class, 'dailyUp']);
 
 Route::get('/quick', [BinanceController::class, 'quick']);
+
+Route::get('/crypto/{crypto}', [BinanceController::class, 'monitor']);

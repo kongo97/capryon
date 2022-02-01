@@ -86,7 +86,7 @@ class CapryonService extends Command
 
             $delta_percent = ($history['history'][count($history['history'])-1]['close'] - $history['history'][0]['open']) / $history['history'][0]['open'] * 100;
 
-            if(( ($delta_percent <= -2 && $crypto->delta_percent > 5 ) || (($crypto->max - $history['history'][count($history['history'])-1]['close'] > $history['history'][count($history['history'])-1]['close'] - $crypto->min) && $delta_percent <= -2)) && $crypto->isDailyUpdated == true ) 
+            if($delta_percent <= -2.5 && $crypto->formatNumber('price') != "0,00") 
             {
                 $crypto->isQuick = true;
             }
@@ -146,6 +146,45 @@ class CapryonService extends Command
     public static function quick()
     {
         return Crypto::all()->where('isQuick', true)->sortBy('delta_percent');
+    }
+
+    # get trade list
+    public static function tradeList($crypto)
+    {
+        $crypto = strtoupper($crypto);
+
+        $trade_list = BinanceService::getTradeList($crypto);
+
+        $keys = array_column($trade_list, 'price');
+        array_multisort($keys, SORT_ASC, $trade_list);
+
+        $response = [
+            "buyers" => [],
+            "sellers" => [],
+            "count" => [
+                "buyers" => 0,
+                "sellers" => 0,
+                "total" => 0
+            ]
+        ];
+
+        foreach($trade_list as $trade)
+        {
+            if($trade["isBuyerMaker"])
+            {
+                $response["buyers"][$trade["price"]] = $trade;
+                $response["count"]["buyers"] += $trade["quoteQty"];
+            }
+            else
+            {
+                $response["sellers"][$trade["price"]] = $trade;
+                $response["count"]["sellers"] += $trade["quoteQty"];
+            }
+
+            $response["count"]["total"] += $trade["quoteQty"];
+        }
+
+        return $response;
     }
 
 

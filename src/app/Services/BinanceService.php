@@ -119,6 +119,58 @@ class BinanceService extends Command
         return $json_response;
     }
 
+    # get current average price
+    public static function getTradeList($name = "")
+    {
+        # CURRENT AVERAGE PRICE: {{binance}}/api/v3/avgPrice?symbol={{ATAUSDT}}
+        try 
+        {
+            $response = Http::get(env('BINANCE_API')."/api/v3/trades?symbol=$name&limit=500");
+        }
+        # connection error
+        catch(GuzzleHttp\Exception\ConnectException $e) {
+            Log::debug('Connection error', $e);
+            return null;
+        }
+        # bad response error
+        catch(GuzzleHttp\Exception\BadResponseException $e) {
+            Log::debug('Response error', $e);
+            return null;
+        }
+        # request error
+        catch(GuzzleHttp\Exception\RequestException $e) {
+            Log::debug('Request error', $e);
+            return null;
+        }
+        # connection error
+        catch(Illuminate\Http\Client\ConnectException $e) {
+            Log::debug('Connection error', $e);
+            return null;
+        }
+        # bad response error
+        catch(Illuminate\Http\Client\BadResponseException $e) {
+            Log::debug('Response error', $e);
+            return null;
+        }
+        # request error
+        catch(Illuminate\Http\Client\RequestException $e) {
+            Log::debug('Request error', $e);
+            return null;
+        }
+        # all
+        catch(Exception $ex)
+        {
+            Log::debug('Error', $ex);
+            return null;
+        }
+
+        # decode json response
+        $json_response = json_decode($response->body(), true);
+
+        # return response
+        return $json_response;
+    }
+
     # get price changes (24H)
     public static function getPriceChange($name = "")
     {

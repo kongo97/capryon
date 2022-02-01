@@ -32,6 +32,14 @@ class CapryonServiceTest extends TestCase
         $this->assertNotNull($cryptos);
     }
 
+    // ./vendor/bin/phpunit --filter testTradeList tests/Unit/CapryonServiceTest.php
+    public function testTradeList($crypto="BTCUSDT")
+    {
+        $trade_list = CapryonService::tradeList($crypto);
+
+        $this->assertNotNull($trade_list);
+    }
+
     // ./vendor/bin/phpunit --filter testDailyUp tests/Unit/CapryonServiceTest.php
     public function testDailyUp()
     {

@@ -166,4 +166,19 @@ class BinanceController extends Controller
 
         return view('layouts/app', ['title' => 'Quick', 'page' => 'dailyUp', 'dailyUp' => $daily_up]);
     }
+
+    public function monitor($crypto)
+    {
+        $crypto = Crypto::all()->where('name', $crypto)->first();
+
+        $trade_list = CapryonService::tradeList($crypto->symbol);
+
+        return view('layouts/app', [
+            'title' => strtoupper($crypto->name), 
+            'page' => 'monitor', 
+            'crypto' => $crypto, 
+            "trade_list" => $trade_list, 
+            "buyers" => $trade_list["count"]['buyers'], "sellers" => $trade_list["count"]['sellers']
+        ]);
+    }
 }
