@@ -20,6 +20,8 @@
             @include($page)
         </div>
 
+        @yield('vue')
+
         @include('scripts')
     </body>
 </html>

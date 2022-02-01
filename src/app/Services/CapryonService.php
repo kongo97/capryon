@@ -172,12 +172,32 @@ class CapryonService extends Command
         {
             if($trade["isBuyerMaker"])
             {
-                $response["buyers"][$trade["price"]] = $trade;
+                if(isset($response["buyers"][$trade["price"]]))
+                {
+                    $response["buyers"][$trade["price"]]["price"] = $trade["price"];
+                    $response["buyers"][$trade["price"]]["qty"] += $trade["qty"];
+                    $response["buyers"][$trade["price"]]["quoteQty"] += $trade["quoteQty"];
+                }
+                else
+                {
+                    $response["buyers"][$trade["price"]] = $trade;
+                }
+                
                 $response["count"]["buyers"] += $trade["quoteQty"];
             }
             else
             {
-                $response["sellers"][$trade["price"]] = $trade;
+                if(isset($response["sellers"][$trade["price"]]))
+                {
+                    $response["sellers"][$trade["price"]]["price"] = $trade["price"];
+                    $response["sellers"][$trade["price"]]["qty"] += $trade["qty"];
+                    $response["sellers"][$trade["price"]]["quoteQty"] += $trade["quoteQty"];
+                }
+                else
+                {
+                    $response["sellers"][$trade["price"]] = $trade;
+                }
+
                 $response["count"]["sellers"] += $trade["quoteQty"];
             }
 

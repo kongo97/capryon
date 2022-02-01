@@ -178,7 +178,39 @@ class BinanceController extends Controller
             'page' => 'monitor', 
             'crypto' => $crypto, 
             "trade_list" => $trade_list, 
-            "buyers" => $trade_list["count"]['buyers'], "sellers" => $trade_list["count"]['sellers']
+            "buyers" => $trade_list["count"]['buyers'], 
+            "sellers" => $trade_list["count"]['sellers'],
+            "history_15m" => json_decode($crypto->history_15m, true),
+            "history_1h" => json_decode($crypto->history_1h, true)
         ]);
+    }
+
+    public function tradeList($crypto)
+    {
+        $crypto = Crypto::all()->where('name', $crypto)->first();
+
+        $trade_list = CapryonService::tradeList($crypto->symbol);
+
+        return json_encode($trade_list);
+    }
+
+    public function updateHistory_15m($crypto)
+    {
+        $crypto = Crypto::all()->where('name', $crypto)->first();
+
+        // get 24h history (split 1h)
+        $history = BinanceService::history($crypto["symbol"], "1m", 60);
+
+        return json_encode($history);
+    }
+
+    public function updateHistory_1h($crypto)
+    {
+        $crypto = Crypto::all()->where('name', $crypto)->first();
+        
+        // get 24h history (split 1h)
+        $history = BinanceService::history($crypto["symbol"], "1h", 1);
+
+        return json_encode($history);
     }
 }

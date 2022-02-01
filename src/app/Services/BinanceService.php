@@ -125,7 +125,7 @@ class BinanceService extends Command
         # CURRENT AVERAGE PRICE: {{binance}}/api/v3/avgPrice?symbol={{ATAUSDT}}
         try 
         {
-            $response = Http::get(env('BINANCE_API')."/api/v3/trades?symbol=$name&limit=500");
+            $response = Http::get(env('BINANCE_API')."/api/v3/trades?symbol=$name&limit=1000");
         }
         # connection error
         catch(GuzzleHttp\Exception\ConnectException $e) {

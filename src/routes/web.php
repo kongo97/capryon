@@ -53,3 +53,9 @@ Route::get('/dailyUp', [BinanceController::class, 'dailyUp']);
 Route::get('/quick', [BinanceController::class, 'quick']);
 
 Route::get('/crypto/{crypto}', [BinanceController::class, 'monitor']);
+
+Route::get('/api/tradeList/{crypto}', [BinanceController::class, 'tradeList']);
+
+Route::get('/api/updateHistory_15m/{crypto}', [BinanceController::class, 'updateHistory_15m']);
+
+Route::get('/api/updateHistory_1h/{crypto}', [BinanceController::class, 'updateHistory_1h']);

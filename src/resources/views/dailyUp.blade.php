@@ -129,12 +129,10 @@
       // this.read_balance = this.getBalance();
     },
   })
-</script>
 
-@endsection
-
-<script>
   setTimeout(function() {
     location.reload();
   }, 1000 * 30);
 </script>
+
+@endsection
