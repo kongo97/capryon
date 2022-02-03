@@ -32,6 +32,9 @@ class Kernel extends ConsoleKernel
 
         // quick update
         $schedule->exec("./vendor/bin/phpunit --filter testQuickUpdate tests/Unit/CapryonServiceTest.php")->everyMinute()->withoutOverlapping();
+
+        // hour update
+        $schedule->exec("./vendor/bin/phpunit --filter testHourUpdate tests/Unit/CapryonServiceTest.php")->everyMinute()->withoutOverlapping();
     }
 
     /**

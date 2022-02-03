@@ -15,9 +15,6 @@
           <th>Max<sub>($)</sub></th>
           <th>Earn<sub>($)</sub></th>
           <th>History<sub>(24h)</sub></th>
-          <!--<th>History<sub>(24h compressed)</sub></th>-->
-          <th>History<sub>(1h)</sub></th>
-          <!--<th>History<sub>(1h compressed)</sub></th>-->
           <th>History<sub>(15m)</sub></th>
         </tr>
       </thead>
@@ -42,41 +39,6 @@
                   </div>
                 @endif
               </td>
-              <!--
-              <td>
-                @if($crypto->history_24h != null)
-                  <div class="bars-container">
-                  @foreach((json_decode($crypto->history_24h, true))['compressed'] as $history)
-                      <div class="vertical-bar @if($history['delta'] > 0) green @else red @endif" style="--height: {{ abs(($history['close'] - $history['open']) * 50 / ($crypto->max - $crypto->min))}}px; --margin: {{ abs(($crypto->max - $history['close']) * 50 / ($crypto->max - $crypto->min))}}px"></div>
-                    @endforeach
-                  </div>
-                @endif
-              </td>
-              -->
-              <td>
-                @if($crypto->history_1h != null)
-                  <div class="bars-container">
-                    @foreach((json_decode($crypto->history_1h, true))['history'] as $history)
-                      @if( (json_decode($crypto->history_1h, true))['info']['max'] - (json_decode($crypto->history_1h, true))['info']['min'] > 0)
-                        <div class="vertical-bar @if($history['delta'] > 0) green @else red @endif" style="--height: {{ abs(($history['close'] - $history['open']) * 50 / ((json_decode($crypto->history_1h, true))['info']['max'] - (json_decode($crypto->history_1h, true))['info']['min']))}}px; --margin: {{ abs(($history['max'] - $history['close']) * 50 / ((json_decode($crypto->history_1h, true))['info']['max'] - (json_decode($crypto->history_1h, true))['info']['min']))}}px"></div>
-                      @endif
-                    @endforeach
-                  </div>
-                @endif
-              </td>
-              <!--
-              <td>
-                @if($crypto->history_1h != null)
-                  <div class="bars-container">
-                    @foreach((json_decode($crypto->history_1h, true))['compressed'] as $history)
-                      @if( (json_decode($crypto->history_1h, true))['info']['max'] - (json_decode($crypto->history_1h, true))['info']['min'] > 0)
-                        <div class="vertical-bar @if($history['delta'] > 0) green @else red @endif" style="--height: {{ abs(($history['close'] - $history['open']) * 50 / ((json_decode($crypto->history_1h, true))['info']['max'] - (json_decode($crypto->history_1h, true))['info']['min']))}}px; --margin: {{ abs(($history['max'] - $history['close']) * 50 / ((json_decode($crypto->history_1h, true))['info']['max'] - (json_decode($crypto->history_1h, true))['info']['min']))}}px"></div>
-                      @endif
-                    @endforeach
-                  </div>
-                @endif
-              </td>
-              -->
               <td>
                 @if($crypto->history_15m != null)
                   <div class="bars-container">
@@ -132,7 +94,7 @@
 
   setTimeout(function() {
     location.reload();
-  }, 1000 * 30);
+  }, 1000 * 60 * 5);
 </script>
 
 @endsection

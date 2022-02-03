@@ -21,9 +21,12 @@ class CapryonService extends Command
 
         foreach($cryptos as $crypto)
         {
+            $info = BinanceService::getInfo($crypto["symbol"]);
+
             Crypto::create([
                 'name' => strtolower($crypto["name"]),
                 'symbol' => strtolower($crypto["symbol"]),
+                "stepSize" => $info["filters"][2]["stepSize"],
             ]);
         }
 
@@ -60,11 +63,7 @@ class CapryonService extends Command
                 // get 24h history (split 1h)
                 $history = BinanceService::history($crypto["symbol"], "1h", 24);
 
-                // get last h history (split 1h)
-                $last = BinanceService::history($crypto["symbol"], "3m", 20);
-
                 $crypto->history_24h = json_encode($history);
-                $crypto->history_1h = json_encode($last);
             }
 
             $crypto->save();
@@ -107,6 +106,29 @@ class CapryonService extends Command
         return Crypto::all();
     }
 
+    # update crypto up
+    public static function hourUpdate()
+    {
+        $cryptos = Crypto::all();
+
+        foreach($cryptos as $crypto)
+        {
+            if($crypto == null)
+            {
+                continue;
+            }
+
+            // get 24h history (split 1h)
+            $history = BinanceService::history($crypto->symbol, "1m", 60);
+
+            $crypto->history_1h = json_encode($history);
+
+            $crypto->save();
+        }
+
+        return Crypto::all();
+    }
+
     # is crypto daily-up?
     public static function _dailyUpdate($symbol)
     {
@@ -124,8 +146,6 @@ class CapryonService extends Command
 
         $percent_change = round($price_change["priceChangePercent"], 2);
 
-        $info = BinanceService::getInfo($symbol);
-
         $up_crypto = [
             "symbol" => $symbol,
             "delta" => $percent_change,
@@ -133,7 +153,6 @@ class CapryonService extends Command
             "min" => $price_change["lowPrice"],
             "start" => $price_change["openPrice"],
             "price" => $price_change["lastPrice"],
-            "stepSize" => $info["filters"][2]["stepSize"],
         ];
 
         return $up_crypto;
@@ -175,7 +194,7 @@ class CapryonService extends Command
                 "sellers" => 0,
                 "total" => 0
             ],
-            "nearestBuy" => 0
+            "nearestBuy" => $trade_list[0]["price"]
         ];
 
 
@@ -201,25 +220,21 @@ class CapryonService extends Command
 
         foreach($trade_list as $trade)
         {
-            if($trade["isBuyerMaker"])
+            if(!$trade["isBuyerMaker"])
             {
                 if(isset($response["buyers"][$trade["price"]]))
                 {
                     $response["buyers"][$trade["price"]]["price"] = $trade["price"];
                     $response["buyers"][$trade["price"]]["qty"] += $trade["qty"];
-                    $response["buyers"][$trade["price"]]["quoteQty"] += $trade["quoteQty"];
+                    $response["buyers"][$trade["price"]]["quoteQty"] += round($trade["quoteQty"], 2);
                 }
                 else
                 {
                     $response["buyers"][$trade["price"]] = $trade;
+                    $response["buyers"][$trade["price"]]["quoteQty"] = round($trade["quoteQty"], 2);
                 }
                 
-                $response["count"]["buyers"] += $trade["quoteQty"];
-
-                if(count($trade_list) - $counter == (int)count($trade_list) / 2)
-                {
-                    
-                }
+                $response["count"]["buyers"] += round($trade["quoteQty"], 2);
             }
             else
             {
@@ -227,20 +242,19 @@ class CapryonService extends Command
                 {
                     $response["sellers"][$trade["price"]]["price"] = $trade["price"];
                     $response["sellers"][$trade["price"]]["qty"] += $trade["qty"];
-                    $response["sellers"][$trade["price"]]["quoteQty"] += $trade["quoteQty"];
+                    $response["sellers"][$trade["price"]]["quoteQty"] += round($trade["quoteQty"], 2);
                 }
                 else
                 {
                     $response["sellers"][$trade["price"]] = $trade;
+                    $response["sellers"][$trade["price"]]["quoteQty"] = round($trade["quoteQty"], 2);
                 }
 
-                $response["count"]["sellers"] += $trade["quoteQty"];
+                $response["count"]["sellers"] += round($trade["quoteQty"], 2);
             }
 
-            $response["count"]["total"] += $trade["quoteQty"];
+            $response["count"]["total"] += round($trade["quoteQty"], 2);
         }
-
-        $response["nearestBuy"] = $response["buyers"][array_key_last($response["buyers"])]["price"];
 
         return $response;
     }

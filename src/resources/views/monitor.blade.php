@@ -108,7 +108,7 @@
     data: {
       price: 0,
       balance: 0,
-      balance_crypto: {{$balance_crypto}},
+      balance_crypto: {{$balance_crypto != '' ? $balance_crypto : '0'}},
       balance_usdt: {{$balance_usdt}},
       history_15m: JSON.parse('{!! json_encode($history_15m) !!}'),
       history_1h: JSON.parse('{!! json_encode($history_1h) !!}'),
@@ -132,14 +132,14 @@
       buyers: {
         labels: [
           @foreach($trade_list['buyers'] as $trade)
-            "{{$trade['price']}}",
+            {{$trade['quoteQty']}},
           @endforeach
         ],
         datasets: [{
           label: 'Buyers',
           data: [
             @foreach($trade_list['buyers'] as $trade)
-              {{$trade['quoteQty']}},
+              "{{$trade['price']}}",
             @endforeach
           ],
           backgroundColor: 'rgba(255, 99, 132, 0.3)',
@@ -151,14 +151,14 @@
       sellers: {
         labels: [
           @foreach($trade_list['sellers'] as $trade)
-            "{{$trade['price']}}",
+            {{$trade['quoteQty']}},
           @endforeach
         ],
         datasets: [{
           label: 'Sellers',
           data: [
             @foreach($trade_list['sellers'] as $trade)
-              {{$trade['quoteQty']}},
+              "{{$trade['price']}}",
             @endforeach
           ],
           backgroundColor: 'rgba(75, 192, 192, 0.3)',
@@ -174,8 +174,8 @@
             data: [
               @foreach($trade_list['buyers'] as $trade)
                 {
-                  x: {{$trade['price']}},
-                  y: {{$trade['quoteQty']}}
+                  x: {{$trade['quoteQty']}},
+                  y: {{$trade['price']}}
                 },
               @endforeach
             ],
@@ -186,8 +186,8 @@
             data: [
               @foreach($trade_list['sellers'] as $trade)
                 {
-                  x: {{$trade['price']}},
-                  y: {{$trade['quoteQty']}}
+                  x: {{$trade['quoteQty']}},
+                  y: {{$trade['price']}}
                 },
               @endforeach
             ],
@@ -240,9 +240,9 @@
 
             for(buyer in _buyers)
             {
-              app.buyers.labels.push(_buyers[buyer].price+"");
-              app.buyers.datasets[0].data.push(_buyers[buyer].quoteQty);
-              app.traderListScatter.datasets[0].data.push({x: _buyers[buyer].price, y: _buyers[buyer].quoteQty});
+              app.buyers.labels.push(_buyers[buyer].quoteQty);
+              app.buyers.datasets[0].data.push(_buyers[buyer].price+"");
+              app.traderListScatter.datasets[0].data.push({x: _buyers[buyer].quoteQty, y: _buyers[buyer].price});
             }
 
             app.sellers.labels = [];
@@ -251,9 +251,9 @@
 
             for(seller in _sellers)
             {
-              app.sellers.labels.push(_sellers[seller].price+"");
-              app.sellers.datasets[0].data.push(_sellers[seller].quoteQty);
-              app.traderListScatter.datasets[1].data.push({x: _sellers[seller].price, y: _sellers[seller].quoteQty});
+              app.sellers.labels.push(_sellers[seller].quoteQty);
+              app.sellers.datasets[0].data.push(_sellers[seller].price+"");
+              app.traderListScatter.datasets[1].data.push({x: _sellers[seller].quoteQty, y: _sellers[seller].price});
             }
 
             app.chart.update();
@@ -450,7 +450,7 @@
               event.preventDefault();
               return;
             } 
-            app.balance_crypto = response.data.amount;
+            app.balance_crypto = response.data.amount != '' ? response.data.amount : 0;
         });
       },
       buy: function()

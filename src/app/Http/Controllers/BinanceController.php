@@ -92,7 +92,7 @@ class BinanceController extends Controller
 
         $amount = $crypto != null ? BinanceService::amount($crypto->name) : round(BinanceService::amount("usdt"), 2);
 
-        if($amount == null)
+        if($amount === null)
         {
             return json_encode($response);
         }
@@ -258,7 +258,7 @@ class BinanceController extends Controller
     {
         $crypto = Crypto::all()->where('name', $crypto)->first();
 
-        $amount = round(BinanceService::amount("usdt"), 2);
+        $amount = round(BinanceService::amount("usdt"), 0, PHP_ROUND_HALF_DOWN);
 
         // get 24h history (split 1h)
         $price = BinanceService::getPrice($crypto->symbol);
