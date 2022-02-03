@@ -126,6 +126,16 @@ class BinanceServiceTest extends TestCase
         $this->assertNotFalse($price);
     }
 
+    // ./vendor/bin/phpunit --filter testGetInfo tests/Unit/BinanceServiceTest.php
+    public function testGetInfo()
+    {
+        $price = BinanceService::getInfo("PEOPLEUSDT");
+
+        print_r($price);
+
+        $this->assertNotNull($price);
+    }
+
     // ./vendor/bin/phpunit --filter testSell tests/Unit/BinanceServiceTest.php
     public function testSell()
     {

@@ -22,6 +22,7 @@ class CryptosTable extends Migration
             $table->float("delta_percent")->nullable();
             $table->string("min")->nullable();
             $table->string("max")->nullable();
+            $table->string("stepSize")->nullable();
             $table->json("history_24h")->nullable();
             $table->json("history_1h")->nullable();
             $table->json("history_15m")->nullable();

@@ -74,7 +74,32 @@ class BinanceController extends Controller
 
         $response = [
             "error" => false,
-            "balance" => $balance <= 300 ? round($balance, 2, PHP_ROUND_HALF_DOWN) : round($balance, 2, PHP_ROUND_HALF_DOWN)
+            "balance" => round($balance, 2, PHP_ROUND_HALF_DOWN)
+        ];
+
+        return json_encode($response);
+    }
+    
+    public function getAmount($crypto)
+    {
+        $crypto = Crypto::all()->where('name', $crypto)->first();
+
+        # set default response
+        $response = [
+            "error" => true,
+            "data" => []
+        ];
+
+        $amount = $crypto != null ? BinanceService::amount($crypto->name) : round(BinanceService::amount("usdt"), 2);
+
+        if($amount == null)
+        {
+            return json_encode($response);
+        }
+
+        $response = [
+            "error" => false,
+            "amount" => $amount
         ];
 
         return json_encode($response);
@@ -181,7 +206,9 @@ class BinanceController extends Controller
             "buyers" => $trade_list["count"]['buyers'], 
             "sellers" => $trade_list["count"]['sellers'],
             "history_15m" => json_decode($crypto->history_15m, true),
-            "history_1h" => json_decode($crypto->history_1h, true)
+            "history_1h" => json_decode($crypto->history_1h, true),
+            "balance_crypto" => BinanceService::amount($crypto->name),
+            "balance_usdt" => round(BinanceService::amount("usdt"), 2),
         ]);
     }
 
@@ -212,5 +239,70 @@ class BinanceController extends Controller
         $history = BinanceService::history($crypto["symbol"], "1h", 1);
 
         return json_encode($history);
+    }
+
+    public function price($crypto)
+    {
+        $crypto = Crypto::all()->where('name', $crypto)->first();
+        
+        // get 24h history (split 1h)
+        $price = BinanceService::getPrice($crypto->symbol);
+
+        $price["time"] = date('Y/m/d H:i:s');
+        $price["price"] = rtrim($price["price"], 0);
+
+        return json_encode($price);
+    }
+
+    public function buy($crypto)
+    {
+        $crypto = Crypto::all()->where('name', $crypto)->first();
+
+        $amount = round(BinanceService::amount("usdt"), 2);
+
+        // get 24h history (split 1h)
+        $price = BinanceService::getPrice($crypto->symbol);
+        $price = $price["price"];
+
+        $amount = $amount / $price;
+
+        $i = round($amount / $crypto->stepSize);
+        $diff = $amount - $i * $crypto->stepSize;
+
+        $amount = $amount - $diff;
+        
+        $buy = BinanceService::buy($crypto->symbol, $amount, $price);
+
+        if(!$buy)
+        {
+            return json_encode(["error" => true]);
+        }
+
+        return json_encode(["error" => false, "buy" => $buy]);
+    }
+
+    public function sell($crypto)
+    {
+        $crypto = Crypto::all()->where('name', $crypto)->first();
+
+        $amount = BinanceService::amount($crypto->name);
+
+        $i = round($amount / $crypto->stepSize);
+        $diff = $amount - $i * $crypto->stepSize;
+
+        $amount = $amount - $diff;
+
+        // get 24h history (split 1h)
+        $price = BinanceService::getPrice($crypto->symbol);
+        $price = $price["price"];
+        
+        $sell = BinanceService::sell($crypto->symbol, $amount, $price);
+
+        if(!$sell)
+        {
+            return json_encode(["error" => true]);
+        }
+
+        return json_encode(["error" => false, "sell" => $sell]);
     }
 }

@@ -1,3 +1,8 @@
+body
+{
+    background-color: #efefef;
+}
+
 .vertical-bar
 {
     width: 4px;
@@ -15,12 +20,12 @@
 
 .green
 {
-    background-color: green;
+    background-color: rgb(75, 192, 192);
 }
 
 .red
 {
-    background-color: red;
+    background-color: rgb(255, 99, 132);
 }
 
 .bars-container
@@ -39,3 +44,28 @@
     padding: .5em .75em;
     vertical-align: middle;
   }
+
+#price-in-card
+{
+    font-size: 2em;
+    padding: 15px;
+    width: 100%;
+    text-align: center;
+}
+
+.corner-left
+{
+    position: absolute;
+    left: 0;
+}
+
+.buttons-in-card
+{
+    padding: 23px;
+    text-align: center;
+}
+
+#cardTradeListTotal
+{
+    background-image: linear-gradient(to right, rgba(255, 99, 132, 0.7) , rgba(75, 192, 192, 0.7));
+}

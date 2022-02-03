@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\Crypto;
 use App\Models\Order;
 use App\Services\Post;
+use App\Services\CapryonService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -70,6 +71,8 @@ class BinanceService extends Command
     # get current average price
     public static function getPrice($name = "")
     {
+        $name = strtoupper($name);
+
         # CURRENT AVERAGE PRICE: {{binance}}/api/v3/avgPrice?symbol={{ATAUSDT}}
         try 
         {
@@ -169,6 +172,70 @@ class BinanceService extends Command
 
         # return response
         return $json_response;
+    }
+
+    # get current average price
+    public static function getInfo($symbol)
+    {
+        $symbol = strtoupper($symbol);
+
+        # CURRENT AVERAGE PRICE: {{binance}}/api/v3/avgPrice?symbol={{ATAUSDT}}
+        try 
+        {
+            $response = Http::get(env('BINANCE_API')."/api/v3/exchangeInfo");
+        }
+        # connection error
+        catch(GuzzleHttp\Exception\ConnectException $e) {
+            Log::debug('Connection error', $e);
+            return null;
+        }
+        # bad response error
+        catch(GuzzleHttp\Exception\BadResponseException $e) {
+            Log::debug('Response error', $e);
+            return null;
+        }
+        # request error
+        catch(GuzzleHttp\Exception\RequestException $e) {
+            Log::debug('Request error', $e);
+            return null;
+        }
+        # connection error
+        catch(Illuminate\Http\Client\ConnectException $e) {
+            Log::debug('Connection error', $e);
+            return null;
+        }
+        # bad response error
+        catch(Illuminate\Http\Client\BadResponseException $e) {
+            Log::debug('Response error', $e);
+            return null;
+        }
+        # request error
+        catch(Illuminate\Http\Client\RequestException $e) {
+            Log::debug('Request error', $e);
+            return null;
+        }
+        # all
+        catch(Exception $ex)
+        {
+            Log::debug('Error', $ex);
+            return null;
+        }
+
+        # decode json response
+        $json_response = json_decode($response->body(), true);
+
+        $info = null;
+
+        foreach($json_response["symbols"] as $current)
+        {
+            if($current["symbol"] == $symbol)
+            {
+                $info = $current;
+            }
+        }
+
+        # return response
+        return $info;
     }
 
     # get price changes (24H)
@@ -278,16 +345,21 @@ class BinanceService extends Command
     }
     
     # sell crypto
-    public static function sell($name, $amount)
+    public static function sell($name, $amount, $price)
     {
+        $name = strtoupper($name);
+
         # ALL CRYPTO: {{binance}}/api/v3/order/test?symbol=BTCUSDT&side=SELL&type=LIMIT&timeInForce=GTC&quantity=0.01&price=9000&newClientOrderId=my_order_id_1&timestamp={{timestamp}}&signature={{signature}}
         try {
             # get current timestamp
             $params = [
                 "symbol" => $name,
                 "side" => "SELL",
-                "type" => "MARKET",
+                "type" => "LIMIT",
+                //"quoteOrderQty" => $amount*$price["price"],
                 "quantity" => $amount,
+                "price" => $price,
+                "timeInForce" => "GTC",
                 "timestamp" => BinanceService::getTimestamp(),
             ];
 
@@ -329,16 +401,20 @@ class BinanceService extends Command
     }
     
     # buy crypto
-    public static function buy($name, $amount)
+    public static function buy($name, $amount, $price)
     {
+        $name = strtoupper($name);
+
         # ALL CRYPTO: {{binance}}/api/v3/order/test?symbol=BTCUSDT&side=SELL&type=LIMIT&timeInForce=GTC&quantity=0.01&price=9000&newClientOrderId=my_order_id_1&timestamp={{timestamp}}&signature={{signature}}
         try {
             # get current timestamp
             $params = [
                 "symbol" => $name,
                 "side" => "BUY",
-                "type" => "MARKET",
-                "quoteOrderQty" => $amount,
+                "type" => "LIMIT",
+                "quantity" => $amount,
+                "price" => $price,
+                "timeInForce" => "GTC",
                 "timestamp" => BinanceService::getTimestamp(),
             ];
 
@@ -541,6 +617,83 @@ class BinanceService extends Command
     }
 
     # get total amount
+    public static function amount($name)
+    {
+        $name = strtoupper($name);
+        
+        # CURRENT AVERAGE PRICE: {{url}}/api/v3/account?timestamp={{timestamp}}&signature={{signature}}
+        try {
+            # get current timestamp
+            $params = [
+                "timestamp" => BinanceService::getTimestamp(),
+            ];
+
+            $signature = BinanceService::getSignature($params);
+
+            $query = $signature["query"];
+            $signature = $signature["signature"];
+
+            $params["signature"] = $signature;
+
+            $key = env('BINANCE_API_KEY');
+
+            $response = Http::withHeaders(['X-MBX-APIKEY' => $key, 'Content-Type' => 'application/x-www-form-urlencoded'])->asForm()->get(env('BINANCE_API')."/api/v3/account", $params);
+        }
+        # connection error
+        catch(GuzzleHttp\Exception\ConnectException $e) {
+            Log::debug('Connection error', $e);
+            return null;
+        }
+        # bad response error
+        catch(GuzzleHttp\Exception\BadResponseException $e) {
+            Log::debug('Response error', $e);
+            return null;
+        }
+        # request error
+        catch(GuzzleHttp\Exception\RequestException $e) {
+            Log::debug('Request error', $e);
+            return null;
+        }
+        # connection error
+        catch(Illuminate\Http\Client\ConnectException $e) {
+            Log::debug('Connection error', $e);
+            return null;
+        }
+        # bad response error
+        catch(Illuminate\Http\Client\BadResponseException $e) {
+            Log::debug('Response error', $e);
+            return null;
+        }
+        # request error
+        catch(Illuminate\Http\Client\RequestException $e) {
+            Log::debug('Request error', $e);
+            return null;
+        }
+        # all
+        catch(Exception $ex)
+        {
+            Log::debug('Error', $ex);
+            return null;
+        }
+
+        # decode json response
+        $json_response = json_decode($response->body(), true);
+
+        $response = 0;
+
+        foreach($json_response["balances"] as $balance)
+        {
+            if($balance["asset"] == $name)
+            {
+                $response = $balance["free"] + $balance["locked"];
+            }
+        }
+
+        # return response
+        return rtrim($response, 0);
+    }
+
+    # get total amount
     public static function getTotalAmount()
     {
         # CURRENT AVERAGE PRICE: {{url}}/api/v3/account?timestamp={{timestamp}}&signature={{signature}}
@@ -605,76 +758,30 @@ class BinanceService extends Command
 
         foreach($json_response["balances"] as $balance)
         {
+            if($balance["free"] == 0)
+            {
+                continue;
+            }
+
+            $current = strtolower($balance["asset"]);
+            $current = Crypto::all()->where("name", $current)->first();
+
+            if($current == null && $balance["asset"] != "USDT")
+            {
+                continue;
+            }
+
             if($balance["asset"] == "USDT")
             {
-                $response = $response + $balance["free"];
+                $response += $balance["free"] + $balance["locked"];
             }
-
-            /*
-            if($balance["asset"] == "COMP")
+            else
             {
-                # get current price
-                $price = BinanceService::getPrice("COMPUSDT");
-                $price = $price["price"] * $balance["free"];
+                $price = BinanceService::getPrice($current->symbol);
+                $price = $price["price"] * ($balance["free"] + $balance["locked"]);
 
-                $response = $price + $response;
+                $response += $price;
             }
-
-            if($balance["asset"] == "SUSHI")
-            {
-                # get current price
-                $price = BinanceService::getPrice("SUSHIUSDT");
-                $price = $price["price"] * $balance["free"];
-
-                $response = $price + $response;
-            }
-
-            if($balance["asset"] == "SAND")
-            {
-                # get current price
-                $price = BinanceService::getPrice("SANDUSDT");
-                $price = $price["price"] * $balance["free"];
-
-                $response = $price + $response;
-            }
-
-            if($balance["asset"] == "BAL")
-            {
-                # get current price
-                $price = BinanceService::getPrice("BALUSDT");
-                $price = $price["price"] * $balance["free"];
-
-                $response = $price + $response;
-            }
-
-            if($balance["asset"] == "UNI")
-            {
-                # get current price
-                $price = BinanceService::getPrice("UNIUSDT");
-                $price = $price["price"] * $balance["free"];
-
-                $response = $price + $response;
-            }
-
-            if($balance["asset"] == "MKR")
-            {
-                # get current price
-                $price = BinanceService::getPrice("MKRUSDT");
-                $price = $price["price"] * $balance["free"];
-
-                $response = $price + $response;
-            }
-
-            if($balance["asset"] == "SNX")
-            {
-                # get current price
-                $price = BinanceService::getPrice("SNXUSDT");
-                $price = $price["price"] * $balance["free"];
-
-                $response = $price + $response;
-            }
-            */
-            
         }
 
         # return response

@@ -55,6 +55,7 @@ class CapryonService extends Command
                 $crypto->delta_percent = $delta_percent;
                 $crypto->min = $daily["min"];
                 $crypto->max = $daily["max"];
+                $crypto->stepSize = $daily["stepSize"];
 
                 // get 24h history (split 1h)
                 $history = BinanceService::history($crypto["symbol"], "1h", 24);
@@ -79,14 +80,19 @@ class CapryonService extends Command
 
         foreach($cryptos as $crypto)
         {
+            if($crypto == null)
+            {
+                continue;
+            }
+
             // get 24h history (split 1h)
-            $history = BinanceService::history($crypto["symbol"], "1m", 15);
+            $history = BinanceService::history($crypto->symbol, "1m", 15);
 
             $crypto->history_15m = json_encode($history);
 
             $delta_percent = ($history['history'][count($history['history'])-1]['close'] - $history['history'][0]['open']) / $history['history'][0]['open'] * 100;
 
-            if($delta_percent <= -2.5 && $crypto->formatNumber('price') != "0,00") 
+            if($delta_percent <= -2.5 && $crypto->price != 0) 
             {
                 $crypto->isQuick = true;
             }
@@ -118,6 +124,8 @@ class CapryonService extends Command
 
         $percent_change = round($price_change["priceChangePercent"], 2);
 
+        $info = BinanceService::getInfo($symbol);
+
         $up_crypto = [
             "symbol" => $symbol,
             "delta" => $percent_change,
@@ -125,6 +133,7 @@ class CapryonService extends Command
             "min" => $price_change["lowPrice"],
             "start" => $price_change["openPrice"],
             "price" => $price_change["lastPrice"],
+            "stepSize" => $info["filters"][2]["stepSize"],
         ];
 
         return $up_crypto;
@@ -165,8 +174,30 @@ class CapryonService extends Command
                 "buyers" => 0,
                 "sellers" => 0,
                 "total" => 0
-            ]
+            ],
+            "nearestBuy" => 0
         ];
+
+
+        /*
+        foreach($trade_list as $trade)
+        {
+            if($trade["isBuyerMaker"])
+            {
+                $response["buyers"][] = $trade;
+                
+                $response["count"]["buyers"] += $trade["quoteQty"];
+            }
+            else
+            {
+                $response["sellers"][] = $trade;
+
+                $response["count"]["sellers"] += $trade["quoteQty"];
+            }
+
+            $response["count"]["total"] += $trade["quoteQty"];
+        }
+        */
 
         foreach($trade_list as $trade)
         {
@@ -184,6 +215,11 @@ class CapryonService extends Command
                 }
                 
                 $response["count"]["buyers"] += $trade["quoteQty"];
+
+                if(count($trade_list) - $counter == (int)count($trade_list) / 2)
+                {
+                    
+                }
             }
             else
             {
@@ -203,6 +239,8 @@ class CapryonService extends Command
 
             $response["count"]["total"] += $trade["quoteQty"];
         }
+
+        $response["nearestBuy"] = $response["buyers"][array_key_last($response["buyers"])]["price"];
 
         return $response;
     }

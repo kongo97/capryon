@@ -54,8 +54,20 @@ Route::get('/quick', [BinanceController::class, 'quick']);
 
 Route::get('/crypto/{crypto}', [BinanceController::class, 'monitor']);
 
+# API
+
 Route::get('/api/tradeList/{crypto}', [BinanceController::class, 'tradeList']);
 
 Route::get('/api/updateHistory_15m/{crypto}', [BinanceController::class, 'updateHistory_15m']);
 
 Route::get('/api/updateHistory_1h/{crypto}', [BinanceController::class, 'updateHistory_1h']);
+
+Route::get('/api/price/{crypto}', [BinanceController::class, 'price']);
+
+Route::get('/api/balance', [BinanceController::class, 'getBalance']);
+
+Route::get('/api/amount/{crypto}', [BinanceController::class, 'getAmount']);
+
+Route::get('/buy/{crypto}', [BinanceController::class, 'buy']);
+
+Route::get('/sell/{crypto}', [BinanceController::class, 'sell']);

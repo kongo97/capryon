@@ -1,5 +1,5 @@
 <div class="column is-one-fifth"> 
-  <nav class="panel is-warning">
+  <nav class="panel is-warning has-background-light">
     <p class="panel-heading">
       Market
     </p>
