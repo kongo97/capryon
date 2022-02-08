@@ -60,6 +60,13 @@
 
 <div class="column is-two-fifths">
   <div class="card">
+    <div class="info-card">
+      max: @{{zoomMax}}<sub><sub>$</sub></sub>
+      <br>
+      min: @{{zoomMin}}<sub><sub>$</sub></sub>
+      <br>
+      price: @{{price}}<sub><sub>$</sub></sub>
+    </div>
     <canvas id="priceLineZoom" style="width: 100%; height: 400px;"></canvas>
   </div>
 </div>
@@ -71,31 +78,24 @@
 </div>
 
 <div class="column is-one-third">
-  <div class="card">
-    <canvas id="tradeListBuyers" style="width: 100%; height: 400px;"></canvas>
+  <div class="">
+    <canvas id="tradeListBuyers" style="width: 100%; height: 200px;"></canvas>
+  </div>
+
+  <div class="">
+    <canvas id="tradeListSellers" style="width: 100%; height: 200px;"></canvas>
   </div>
 </div>
 
-<div class="column is-one-third">
+<div class="column is-two-thirds">
   <div class="card">
-    <canvas id="tradeListSellers" style="width: 100%; height: 400px;"></canvas>
+    <canvas id="bars_1h" style="width: 100%; height: 400px;"></canvas>
   </div>
 </div>
 
-<div class="column is-one-third">
+<div class="column is-two-thirds">
   <div class="card">
     <canvas id="tradeListScatter" style="width: 100%; height: 400px;"></canvas>
-  </div>
-</div>
-
-<div class="column is-three-fifths">
-  <div class="card bars-container" style="height: 200px !important">
-    <div 
-      v-for="history in history_15m.history"
-      class="vertical-bar" 
-      v-bind:class="{ green: history.delta > 0, 'red': history.delta <= 0 }"
-      v-bind:style="{ '--height': Math.abs((history.close - history.open) * 200 / (history_1h.info.max - history_1h.info.min)) + 'px', '--margin': Math.abs((history.max - history.close) * 200 / (history_1h.info.max - history_1h.info.min)) + 'px'}"></div>
-    </div>
   </div>
 </div>
 
@@ -112,21 +112,36 @@
       balance_usdt: {{$balance_usdt}},
       history_15m: JSON.parse('{!! json_encode($history_15m) !!}'),
       history_1h: JSON.parse('{!! json_encode($history_1h) !!}'),
+      from_max: 50,
+      from_min: 50,
+      zoomMax: null,
+      zoomMin: null,
       // data
       data: {
         labels: [
           'Buyers',
           'Sellers'
         ],
-        datasets: [{
-          label: 'Trade List',
-          data: [{{ $buyers }}, {{ $sellers }}],
-          backgroundColor: [
-            'rgb(255, 99, 132)',
-            'rgba(75, 192, 192)',
-          ],
-          hoverOffset: 4
-        }]
+        datasets: [
+          {
+            label: 'Trade List',
+            data: [{{ $buyers }}, {{ $sellers }}],
+            backgroundColor: [
+              'rgb(255, 99, 132)',
+              'rgba(75, 192, 192)',
+            ],
+            hoverOffset: 4
+          },
+          {
+            label: 'Tip',
+            data: [50, 50],
+            backgroundColor: [
+              'rgba(54, 54, 54)',
+              'rgba(255, 224, 138)',
+            ],
+            hoverOffset: 4
+          }
+        ]
       },
       // buyers
       buyers: {
@@ -208,6 +223,24 @@
           }
         ]
       },
+      bars_1h: {
+        labels: [
+          @foreach($history_1h['history'] as $history)
+            "{{$history['open_time']}}",
+          @endforeach
+        ],
+        datasets: [
+          {
+            label: 'Price 1h',
+            data: [
+              @foreach($history_1h['history'] as $history)
+                [{{$history['open']}}, {{$history['close']}}],
+              @endforeach
+            ],
+            backgroundColor: "rgb(75, 192, 192)",
+          }
+        ]
+      },
       // chart
       chart: null,
       chart_buyers: null,
@@ -215,6 +248,7 @@
       chart_tradeList_scatter: null,
       chart_priceLine: null,
       chart_priceLineZoom: null,
+      chart_bars_1h: null,
     },
     methods: {
       getTradeList: function() 
@@ -283,6 +317,7 @@
           type: 'bar',
           data: this.buyers,
           options: {
+            indexAxis: 'y',
             scales: {
               y: {
                 beginAtZero: true
@@ -302,6 +337,7 @@
           type: 'bar',
           data: this.sellers,
           options: {
+            indexAxis: 'y',
             scales: {
               y: {
                 beginAtZero: true
@@ -366,6 +402,26 @@
           config
         );
       },
+      updateBars1h: function()
+      { 
+        config = {
+          type: 'bar',
+          data: this.bars_1h,
+          options: {
+            scales: {
+              y: {
+                min: this.history_1h["info"]['min'],
+                max: this.history_1h["info"]['max'],
+              }
+            }
+          },
+        };
+
+        this.chart_bars_1h = new Chart(
+          document.getElementById('bars_1h'),
+          config
+        );
+      },
       updateHistory_15m: function()
       {
         axios.get('/api/updateHistory_15m/{{$crypto->name}}')
@@ -392,6 +448,17 @@
             } 
 
             app.history_1h = response.data;
+
+            app.bars_1h.labels = [];
+            app.bars_1h.datasets[0].data = [];
+
+            for(var x=0; x<app.history_1h['history'].length; x++)
+            {
+              app.bars_1h.labels.push(app.history_1h['history'][x].open_time);
+              app.bars_1h.datasets[0].data.push([app.history_1h['history'][x].open, app.history_1h['history'][x].close]);
+            }
+
+            app.chart_bars_1h.update();
         });
       },
       updatePrice: function()
@@ -408,10 +475,34 @@
             app.priceLine.labels.push(response.data.time);
             app.priceLine.datasets[0].data.push(response.data.price);
 
-            app.price = response.data.price;
-
             app.chart_priceLine.update();
             app.chart_priceLineZoom.update();
+
+            max = null;
+            min = null;
+
+            for(data in app.priceLine.datasets[0].data)
+            {
+              _data = app.priceLine.datasets[0].data[data]
+
+              max = (max < _data || max == null) ? _data : max;
+              min = (min > _data || min == null) ? _data : min;
+            }
+
+            // update max min
+            app.zoomMax = max;
+            app.zoomMin = min;
+
+            from_max = ((max - min) - (response.data.price - min)) * 100 / (max - min);
+            from_min = 100 - from_max;
+          
+            app.data.datasets[1].data[0] = from_min;
+            //app.data.datasets[1].data[1] = 0;
+            app.data.datasets[1].data[1] = from_max;
+
+            app.price = response.data.price;
+
+            app.chart.update();
         });
       },
       updateBalance: function()
@@ -487,6 +578,7 @@
       this.updateTradeListSeller();
       this.updateTradeListScatter();
       this.updatePriceLine();
+      this.updateBars1h();
 
       this.$nextTick(function () {
         window.setInterval(() => {

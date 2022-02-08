@@ -69,3 +69,17 @@ body
 {
     background-image: linear-gradient(to right, rgba(255, 99, 132, 0.7) , rgba(75, 192, 192, 0.7));
 }
+
+.info-card
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 150px;
+    background-color: rgba(66, 66, 66, 0.3);
+    padding: 15px;
+    color: #373232;
+    height: auto;
+    font-weight: 500;
+    font-size: 0.8em;
+}

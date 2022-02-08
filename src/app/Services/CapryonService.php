@@ -23,7 +23,7 @@ class CapryonService extends Command
         {
             $info = BinanceService::getInfo($crypto["symbol"]);
 
-            Crypto::create([
+            Crypto::insertOrIgnore([
                 'name' => strtolower($crypto["name"]),
                 'symbol' => strtolower($crypto["symbol"]),
                 "stepSize" => $info["filters"][2]["stepSize"],
@@ -40,7 +40,7 @@ class CapryonService extends Command
 
         foreach($cryptos as $crypto)
         {
-            $daily = CapryonService::_dailyUpdate($crypto["symbol"]);
+            $daily = CapryonService::_dailyUpdate($crypto->symbol);
 
             if(!$daily || $daily['start'] == 0)
             {
@@ -52,13 +52,12 @@ class CapryonService extends Command
                 $delta_percent = round((($daily['price'] - $daily['start']) / $daily['start']) * 100, 2);
 
                 $crypto->isDailyUpdated = true;
-                $crypto->isDailyUp = $delta_percent > 1 ? true : false;
+                $crypto->isDailyUp = $delta_percent > 0 ? true : false;
                 $crypto->start = $daily["start"];
                 $crypto->price = $daily["price"];
                 $crypto->delta_percent = $delta_percent;
                 $crypto->min = $daily["min"];
                 $crypto->max = $daily["max"];
-                $crypto->stepSize = $daily["stepSize"];
 
                 // get 24h history (split 1h)
                 $history = BinanceService::history($crypto["symbol"], "1h", 24);
@@ -226,15 +225,15 @@ class CapryonService extends Command
                 {
                     $response["buyers"][$trade["price"]]["price"] = $trade["price"];
                     $response["buyers"][$trade["price"]]["qty"] += $trade["qty"];
-                    $response["buyers"][$trade["price"]]["quoteQty"] += round($trade["quoteQty"], 2);
+                    $response["buyers"][$trade["price"]]["quoteQty"] = round($response["buyers"][$trade["price"]]["quoteQty"] + $trade["quoteQty"], 2);
                 }
                 else
                 {
                     $response["buyers"][$trade["price"]] = $trade;
-                    $response["buyers"][$trade["price"]]["quoteQty"] = round($trade["quoteQty"], 2);
+                    $response["buyers"][$trade["price"]]["quoteQty"] = round($response["buyers"][$trade["price"]]["quoteQty"] + $trade["quoteQty"], 2);
                 }
                 
-                $response["count"]["buyers"] += round($trade["quoteQty"], 2);
+                $response["count"]["buyers"] = round($response["count"]["buyers"] + $trade["quoteQty"], 2);
             }
             else
             {
@@ -242,18 +241,18 @@ class CapryonService extends Command
                 {
                     $response["sellers"][$trade["price"]]["price"] = $trade["price"];
                     $response["sellers"][$trade["price"]]["qty"] += $trade["qty"];
-                    $response["sellers"][$trade["price"]]["quoteQty"] += round($trade["quoteQty"], 2);
+                    $response["sellers"][$trade["price"]]["quoteQty"] = round($response["sellers"][$trade["price"]]["quoteQty"] + $trade["quoteQty"], 2);
                 }
                 else
                 {
                     $response["sellers"][$trade["price"]] = $trade;
-                    $response["sellers"][$trade["price"]]["quoteQty"] = round($trade["quoteQty"], 2);
+                    $response["sellers"][$trade["price"]]["quoteQty"] = round($response["sellers"][$trade["price"]]["quoteQty"] + $trade["quoteQty"], 2);
                 }
 
-                $response["count"]["sellers"] += round($trade["quoteQty"], 2);
+                $response["count"]["sellers"] = round($response["count"]["sellers"] + $trade["quoteQty"], 2);
             }
 
-            $response["count"]["total"] += round($trade["quoteQty"], 2);
+            $response["count"]["total"] = round($response["count"]["total"] + $trade["quoteQty"], 2);
         }
 
         return $response;

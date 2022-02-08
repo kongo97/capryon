@@ -90,7 +90,7 @@ class BinanceController extends Controller
             "data" => []
         ];
 
-        $amount = $crypto != null ? BinanceService::amount($crypto->name) : round(BinanceService::amount("usdt"), 2);
+        $amount = $crypto != null ? BinanceService::amount($crypto->name) : round((float)BinanceService::amount("usdt"), 2);
 
         if($amount === null)
         {
@@ -208,7 +208,7 @@ class BinanceController extends Controller
             "history_15m" => json_decode($crypto->history_15m, true),
             "history_1h" => json_decode($crypto->history_1h, true),
             "balance_crypto" => BinanceService::amount($crypto->name),
-            "balance_usdt" => round(BinanceService::amount("usdt"), 2),
+            "balance_usdt" => round((float)BinanceService::amount("usdt"), 2),
         ]);
     }
 
@@ -236,7 +236,7 @@ class BinanceController extends Controller
         $crypto = Crypto::all()->where('name', $crypto)->first();
         
         // get 24h history (split 1h)
-        $history = BinanceService::history($crypto["symbol"], "1h", 1);
+        $history = BinanceService::history($crypto["symbol"], "1m", 60);
 
         return json_encode($history);
     }
