@@ -71,3 +71,5 @@ Route::get('/api/amount/{crypto}', [BinanceController::class, 'getAmount']);
 Route::get('/buy/{crypto}', [BinanceController::class, 'buy']);
 
 Route::get('/sell/{crypto}', [BinanceController::class, 'sell']);
+
+Route::get('/follow', [BinanceController::class, 'follow']);

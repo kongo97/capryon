@@ -4,6 +4,8 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Models\Crypto;
+use App\Services\CapryonService;
 
 class Kernel extends ConsoleKernel
 {
@@ -35,6 +37,10 @@ class Kernel extends ConsoleKernel
 
         // hour update
         $schedule->exec("./vendor/bin/phpunit --filter testHourUpdate tests/Unit/CapryonServiceTest.php")->everyMinute()->withoutOverlapping();
+
+        // follow cryptos
+        $schedule->exec("./vendor/bin/phpunit --filter testFollow tests/Unit/CapryonServiceTest.php")->everyMinute()->withoutOverlapping();
+
     }
 
     /**

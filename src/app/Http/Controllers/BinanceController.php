@@ -305,4 +305,11 @@ class BinanceController extends Controller
 
         return json_encode(["error" => false, "sell" => $sell]);
     }
+
+    public function follow()
+    {
+        $cryptos = Crypto::where('name', '!=', null)->orderByDesc('last_diff_perc')->get()->toArray();
+
+        return json_encode($cryptos);
+    }
 }

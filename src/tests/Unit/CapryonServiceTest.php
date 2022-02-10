@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use Tests\TestCase;
 use App\Services\CapryonService;
 use Illuminate\Support\Facades\Http;
+use App\Models\Crypto;
 
 class CapryonServiceTest extends TestCase
 {
@@ -56,6 +57,19 @@ class CapryonServiceTest extends TestCase
         print_r($cryptos);
 
         $this->assertNotNull($cryptos);
+    }
+
+    // ./vendor/bin/phpunit --filter testFollow tests/Unit/CapryonServiceTest.php
+    public function testFollow()
+    {
+        $return = true;
+
+        foreach(Crypto::all() as $crypto)
+        {
+            $cryptos = CapryonService::follow($crypto);
+        }
+
+        $this->assertTrue($return);
     }
 
 

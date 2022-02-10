@@ -41,6 +41,16 @@
     </div>
   </div>
 
+  <div class="column is-12">
+    <ul class="columns" style="overflow: scroll;">
+      <li v-for="follow in follows" class="column">
+        <a :href="'/crypto/'+follow.name">
+          <div class="card follow-link">@{{follow.name}}<sub><sub>(@{{follow.last_diff_perc}}%)</sub></sub></div>
+        </a>
+      </li>
+    </ul>
+  </div>
+
   <div class="column is-2">
     <div class="card">
       <span class="tag is-warning corner-left">bid</span>
@@ -116,6 +126,7 @@
       from_min: 50,
       zoomMax: null,
       zoomMin: null,
+      follows: [],
       // data
       data: {
         labels: [
@@ -570,6 +581,20 @@
             console.log(response.data);
         });
       },
+      follow: function()
+      {
+        axios.get('/follow')
+        .then(function (response) 
+        {
+            // case error
+            if (response.data.error === true) {
+              event.preventDefault();
+              return;
+            } 
+
+            app.follows = response.data;
+        });
+      },
     },
     mounted () {
       // this.read_balance = this.getBalance();
@@ -589,6 +614,7 @@
           app.updateBalance();
           app.updateBalanceUSDT();
           app.updateBalanceCrypto();
+          app.follow();
         },5000);
       })
     },

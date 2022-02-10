@@ -19,6 +19,8 @@ class CryptosTable extends Migration
             $table->string("symbol")->unique();
             $table->string("start")->nullable();
             $table->string("price")->nullable();
+            $table->string("last_start")->nullable();
+            $table->float("last_diff_perc")->nullable();
             $table->float("delta_percent")->nullable();
             $table->string("min")->nullable();
             $table->string("max")->nullable();

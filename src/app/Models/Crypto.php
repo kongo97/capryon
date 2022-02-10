@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\BinanceService;
 
 class Crypto extends Model
 {
@@ -40,5 +41,10 @@ class Crypto extends Model
     public function link_text($text)
     {
         echo "<a target='_blank' href='https://www.binance.com/en/trade/". strtoupper($this->name)."_USDT?layout=pro' style='margin-right: 5px; margin-left: 5px;'>$text</a>";
+    }
+
+    public function price()
+    {
+        return BinanceService::getPrice($this->symbol);
     }
 }

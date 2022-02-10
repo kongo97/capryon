@@ -258,6 +258,7 @@ class CapryonService extends Command
         return $response;
     }
 
+    
 
 
 
@@ -953,5 +954,61 @@ class CapryonService extends Command
         }
 
         return $result;
+    }
+
+
+
+    # follow crypto price
+    public static function follow($crypto)
+    {
+        if($crypto->last_start == null)
+        {
+            return true;
+        }
+
+        $price = ($crypto->price())['price'];
+
+        # up
+        if($price > $crypto->price)
+        {
+            # up
+            if($crypto->last_diff_perc > 0)
+            {
+                $diff = $price - $crypto->last_start;
+                $diff_perc = round(($diff) / ($crypto->last_start) * 100, 2);
+            }
+            # new up
+            else
+            {
+                $diff = $price - $crypto->price;
+                $diff_perc = round(($diff) / ($crypto->price) * 100, 2);
+
+                $crypto->last_start = $crypto->price;
+            }
+        }
+        # down
+        else
+        {
+            # down
+            if($crypto->last_diff_perc <= 0)
+            {
+                $diff = $price - $crypto->last_start;
+                $diff_perc = round(($diff) / ($crypto->last_start) * 100, 2);
+            }
+            # new down
+            else
+            {
+                $diff = $price - $crypto->price;
+                $diff_perc = round(($diff) / ($crypto->price) * 100, 2);
+
+                $crypto->last_start = $crypto->price;
+            }
+        }
+
+        $crypto->price = $price;
+        $crypto->last_diff_perc = $diff_perc;
+        $crypto->save();
+
+        return true;
     }
 }

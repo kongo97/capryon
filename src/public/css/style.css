@@ -83,3 +83,9 @@ body
     font-weight: 500;
     font-size: 0.8em;
 }
+
+.follow-link
+{
+    padding: 1px 4px 1px 4px;
+    border-radius: 5px;
+}
